@@ -1,0 +1,4 @@
+export enum FileType {
+  PROFILE_PICTURE = 'PROFILE_PICTURE',
+  PROOF_OF_ADDRESS = 'PROOF_OF_ADDRESS',
+}

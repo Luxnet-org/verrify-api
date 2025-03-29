@@ -1,11 +1,11 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RbacService } from '../../rbac/rbac.service';
+import { RbacService } from '../../service/rbac/rbac.service';
 import { Observable } from 'rxjs';
-import { UserType } from '../../user/enum/user-type.enum';
 import { ROLES_KEY } from '../decorator/role.decorator';
 import { Request } from 'express';
 import { UserInfo } from './auth.guard';
+import { UserRole } from '../../model/enum/role.enum';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -17,8 +17,8 @@ export class RoleGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const requiredRoles: UserType[] = this.reflector.getAllAndOverride<
-      UserType[]
+    const requiredRoles: UserRole[] = this.reflector.getAllAndOverride<
+      UserRole[]
     >(ROLES_KEY, [context.getHandler(), context.getClass()]);
 
     if (!requiredRoles) {

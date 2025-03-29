@@ -7,13 +7,13 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
-import { CustomJwtService } from 'src/token/jwt.service';
+import { CustomJwtService } from '../../service/token/jwt.service';
 import { IS_PUBLIC_KEY } from '../decorator/public.decorator';
-import { UserType } from '../../user/enum/user-type.enum';
+import { UserRole } from '../../model/enum/role.enum';
 
 export interface UserInfo {
   userId: string;
-  role: UserType;
+  role: UserRole;
 }
 
 declare global {
@@ -52,7 +52,7 @@ export class AuthGuard implements CanActivate {
     const payload = this.jwtService.verifyJwtToken(bearerToken);
     request['user'] = {
       userId: payload.userId,
-      role: UserType[payload.role],
+      role: UserRole[payload.role],
     };
 
     // if (!request.user) {

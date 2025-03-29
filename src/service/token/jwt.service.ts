@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { MyLoggerService } from 'src/my-logger/my-logger.service';
-import { User } from 'src/user/entities/user.entity';
+import { MyLoggerService } from '../logger/my-logger.service';
+import { User } from '../../model/entity/user.entity';
 
 @Injectable()
 export class CustomJwtService {
@@ -13,7 +13,7 @@ export class CustomJwtService {
   generateJwtToken(user: User): string {
     return this.jwtService.sign({
       userId: user.id,
-      role: user.userType,
+      role: user.role,
     });
   }
 

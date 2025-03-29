@@ -1,4 +1,4 @@
-import { User } from 'src/user/entities/user.entity';
+import { User } from './user.entity';
 import { Auditable } from 'src/utility/autitable.entity';
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 

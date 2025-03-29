@@ -14,6 +14,9 @@ export class LocationEntity extends Auditable {
   city: string;
 
   @Column({ type: 'character varying', nullable: true })
+  address: string;
+
+  @Column({ type: 'character varying', nullable: true })
   location: string;
 
   @Column({ type: 'character varying', nullable: true })

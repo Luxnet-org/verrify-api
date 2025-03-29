@@ -4,16 +4,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Verification } from './entities/verification.entity';
+import { Verification } from '../../model/entity/verification.entity';
 import { Repository } from 'typeorm';
-import { VerificationRequest } from './dto/verification-request.dto';
+import { VerificationRequest } from '../../model/request/verification-request.dto';
 import { HashUtility } from 'src/utility/hash-utility';
-import { MyLoggerService } from 'src/my-logger/my-logger.service';
+import { MyLoggerService } from '../logger/my-logger.service';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from 'src/config-module/configuration';
 import { DateUtility } from 'src/utility/date-utility';
-import { EmailEvent } from '../rabbitmq/email-event.service';
-import { EmailType } from '../email/email-type.enum';
+import { EmailEvent } from '../email/email-event.service';
+import { EmailType } from '../../model/enum/email-type.enum';
+import { VerificationType } from '../../model/enum/verification-type';
 
 @Injectable()
 export class VerificationService {
@@ -65,7 +66,7 @@ export class VerificationService {
     }
 
     await this.emailEvent.sendEmailRequest({
-      type: verificationType,
+      type: verificationType as unknown as EmailType,
       to: user.email,
       context,
     });
@@ -142,7 +143,7 @@ export class VerificationService {
   }
 
   private async findVerification(
-    verificationType: EmailType,
+    verificationType: VerificationType,
     destination: string,
   ): Promise<Verification | null> {
     return await this.verificationRepository.findOneBy({

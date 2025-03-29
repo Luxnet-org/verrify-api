@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { UserType } from '../user/enum/user-type.enum';
+import { UserRole } from '../../model/enum/role.enum';
 
 interface IsAuthorizedParams {
-  currentRole: UserType;
-  requiredRole: UserType;
+  currentRole: UserRole;
+  requiredRole: UserRole;
 }
 
 @Injectable()
@@ -12,38 +12,11 @@ export class RbacService {
   private priority: number = 1;
 
   constructor() {
-    this.buildRoles([UserType.PATIENT, UserType.ADMIN, UserType.SUPER_ADMIN]);
-    this.buildRoles([
-      UserType.PATIENT,
-      UserType.NURSE,
-      UserType.DOCTOR,
-      UserType.ADMIN,
-      UserType.SUPER_ADMIN,
-    ]);
-    this.buildRoles([
-      UserType.PATIENT,
-      UserType.PHARMACIST,
-      UserType.DOCTOR,
-      UserType.ADMIN,
-      UserType.SUPER_ADMIN,
-    ]);
-    this.buildRoles([
-      UserType.PATIENT,
-      UserType.RECEPTIONIST,
-      UserType.DOCTOR,
-      UserType.ADMIN,
-      UserType.SUPER_ADMIN,
-    ]);
-    this.buildRoles([
-      UserType.PATIENT,
-      UserType.LAB_TECHNICIAN,
-      UserType.DOCTOR,
-      UserType.ADMIN,
-      UserType.SUPER_ADMIN,
-    ]);
+    this.buildRoles([UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
+    this.buildRoles([UserRole.SUPPORT, UserRole.ADMIN, UserRole.SUPER_ADMIN]);
   }
 
-  private buildRoles(roles: UserType[]): void {
+  private buildRoles(roles: UserRole[]): void {
     const hierarchy: Map<string, number> = new Map();
     roles.forEach((role) => {
       hierarchy.set(role, this.priority);

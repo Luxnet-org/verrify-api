@@ -1,13 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { RabbitMQService } from './rabbitmq.service';
-import { EmailService } from '../email/email.service';
-import { EmailRequest } from '../email/dto/email-request.dto';
-import { EmailType } from '../email/email-type.enum';
+import { EmailService } from './email.service';
+import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
+import { EmailRequest } from '../../model/request/email-request.dto';
+import { EmailType } from '../../model/enum/email-type.enum';
 
 @Injectable()
 export class EmailEvent implements OnModuleInit {
-  private readonly emailQueue = 'aiemrEmail';
-  private readonly emailRoutingKey = 'aiemrEmailRoutingKey';
+  private readonly emailQueue = 'verrifyEmail';
+  private readonly emailRoutingKey = 'verrifyEmailRoutingKey';
 
   constructor(
     private readonly emailService: EmailService,

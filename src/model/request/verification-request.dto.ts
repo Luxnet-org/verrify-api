@@ -1,20 +1,15 @@
-import { User } from 'src/user/entities/user.entity';
-import { EmailType } from '../../email/email-type.enum';
+import { User } from '../entity/user.entity';
 import { IsNotEmpty, IsString } from 'class-validator';
+import { VerificationType } from '../enum/verification-type';
 
 export class VerificationRequest {
   id?: string;
 
   @IsString()
   @IsNotEmpty()
-  verificationType: EmailType;
+  verificationType: VerificationType;
 
   user: User;
 
   tokenType: 'otp' | 'token';
-
-  // @IsEmail()
-  // @IsString()
-  // @IsOptional()
-  // email?: string;
 }

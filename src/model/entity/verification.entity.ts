@@ -1,14 +1,14 @@
 import { Auditable } from 'src/utility/autitable.entity';
 import { Column, Entity } from 'typeorm';
-import { EmailType } from '../../email/email-type.enum';
+import { VerificationType } from '../enum/verification-type';
 
 @Entity()
 export class Verification extends Auditable {
   @Column({ type: 'character varying', unique: true })
   token: string;
 
-  @Column({ type: 'enum', enum: EmailType })
-  verificationType: EmailType;
+  @Column({ type: 'enum', enum: VerificationType })
+  verificationType: VerificationType;
 
   @Column({ type: 'timestamp with time zone' })
   expireAt: Date;

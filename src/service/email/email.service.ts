@@ -1,7 +1,7 @@
 import { ISendMailOptions, MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { MyLoggerService } from 'src/my-logger/my-logger.service';
-import { EmailRequest } from './dto/email-request.dto';
+import { MyLoggerService } from '../logger/my-logger.service';
+import { EmailRequest } from '../../model/request/email-request.dto';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from 'src/config-module/configuration';
 

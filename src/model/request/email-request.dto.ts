@@ -1,4 +1,4 @@
-import { EmailType } from '../email-type.enum';
+import { EmailType } from '../enum/email-type.enum';
 
 export class EmailRequest {
   type: EmailType;

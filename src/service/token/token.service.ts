@@ -4,16 +4,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Token } from './entities/token.entity';
+import { Token } from '../../model/entity/token.entity';
 import { Repository } from 'typeorm';
-import { MyLoggerService } from 'src/my-logger/my-logger.service';
-import { User } from 'src/user/entities/user.entity';
+import { MyLoggerService } from '../logger/my-logger.service';
+import { User } from '../../model/entity/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { DateUtility } from 'src/utility/date-utility';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from 'src/config-module/configuration';
-import { UserType } from '../user/enum/user-type.enum';
 
 @Injectable()
 export class TokenService {
@@ -35,12 +34,9 @@ export class TokenService {
           request.socket.remoteAddress
         : request.ip || request.socket.remoteAddress;
 
-    const expireAt: Date =
-      user.userType == UserType.PATIENT
-        ? DateUtility.addDay(
-            this.configService.get('token.refreshExpire', { infer: true })!,
-          )
-        : DateUtility.addDay(user.organization.refreshTokenTime);
+    const expireAt: Date = DateUtility.addDay(
+      this.configService.get('token.refreshExpire', { infer: true })!,
+    );
 
     const token: Token = this.tokenRepository.create({
       expireAt,

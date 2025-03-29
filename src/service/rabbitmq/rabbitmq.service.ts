@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from 'src/config-module/configuration';
-import { MyLoggerService } from 'src/my-logger/my-logger.service';
+import { MyLoggerService } from '../logger/my-logger.service'
 import * as amqplib from 'amqplib';
 
 export interface QueueConfig {
@@ -23,9 +23,9 @@ export interface RabbitMQConfig {
 export class RabbitMQService implements OnModuleInit {
   private rabbitMQConfig: RabbitMQConfig = {
     queues: [],
-    retryExchange: 'aiemrRetryExchange',
-    queueExchange: 'aiemrQueueExchange',
-    deadLetterExchange: 'aiemrEmailDeadLetterQueue',
+    retryExchange: 'verrifyRetryExchange',
+    queueExchange: 'verrifyQueueExchange',
+    deadLetterExchange: 'verrifyEmailDeadLetterQueue',
     maxRetryAttempt: 5,
     retryDelayMs: 10000,
   };
