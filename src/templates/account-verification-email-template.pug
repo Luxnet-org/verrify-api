@@ -1,0 +1,44 @@
+doctype html
+html
+  head
+    meta(charset="utf-8")
+    title Account Registration
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f4f4f4;
+      }
+      .header {
+        background-color: #00008B; /* dark blue */
+        color: #ffffff;
+        padding: 20px;
+        text-align: center;
+      }
+      .content {
+        padding: 30px;
+        background: #ffffff;
+        margin: 20px auto;
+        max-width: 600px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      .otp {
+        font-size: 2em;
+        font-weight: bold;
+        color: #00008B; /* dark blue */
+        text-align: center;
+        margin: 20px 0;
+      }
+      p {
+        line-height: 1.6;
+      }
+  body
+    .header
+      h1 Welcome to Our AIEMR
+    .content
+      p Thank you for registering with us. Please use the following One-Time Password (OTP) to verify your account:
+      .otp #{token}
+      p If you did not initiate this registration, please ignore this email.
+      p For support or further assistance, contact our support team.
