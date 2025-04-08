@@ -1,4 +1,4 @@
-import { Entity } from 'typeorm';
+import { Entity, JoinColumn } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { UserRole } from '../enum/role.enum';
 import { FileEntity } from './file.entity';
@@ -12,9 +12,6 @@ export class User extends Auditable {
 
   @Column({ type: 'character varying', nullable: true })
   lastName: string;
-
-  @Column({ type: 'character varying', nullable: true })
-  organizationName: string;
 
   @Column({ type: 'date', nullable: true })
   dob: Date;
@@ -33,16 +30,6 @@ export class User extends Auditable {
 
   @Column({ type: 'character varying', nullable: true })
   phoneNumber: string;
-
-  @OneToOne(() => FileEntity, (file) => file.user, {
-    cascade: true,
-  })
-  profileImage: FileEntity;
-
-  @OneToOne(() => LocationEntity, (location) => location.user, {
-    cascade: true,
-  })
-  address: LocationEntity;
 
   @Column({ type: 'timestamp with time zone', nullable: true })
   lastLogin: Date;
@@ -64,4 +51,13 @@ export class User extends Auditable {
 
   @Column({ type: 'boolean', default: false })
   isEnabled: boolean;
+
+  // Relationships
+  @OneToOne(() => FileEntity, (file) => file.user)
+  profileImage: FileEntity;
+
+  @OneToOne(() => LocationEntity, (location) => location.user, {
+    cascade: true,
+  })
+  address: LocationEntity;
 }

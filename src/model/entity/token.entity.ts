@@ -20,7 +20,7 @@ export class Token extends Auditable {
   @Column({ type: 'timestamp with time zone' })
   expireAt: Date;
 
-  @ManyToOne(() => User, (user) => user.id, {
+  @ManyToOne(() => User, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id' })

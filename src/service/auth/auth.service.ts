@@ -24,6 +24,7 @@ import { RefreshTokenRequestDto } from '../../model/request/refresh-token-reques
 import { VerifyForgotPasswordRequestDto } from 'src/model/request/verify-forgot-password-request.dto';
 import { ForgotPasswordRequestDto } from '../../model/request/forgot-password-request.dto';
 import { ResetPasswordRequestDto } from '../../model/request/reset-password-request.dto';
+import { LocationEntity } from '../../model/entity/location.entity';
 
 @Injectable()
 export class AuthService {
@@ -33,6 +34,8 @@ export class AuthService {
 
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(LocationEntity)
+    private readonly locationRepository: Repository<LocationEntity>,
     private readonly userService: UserService,
     private readonly verificationService: VerificationService,
     private readonly emailService: EmailService,
@@ -80,6 +83,12 @@ export class AuthService {
     });
 
     const newUser: User = await this.userRepository.save(user);
+
+    const address: LocationEntity = this.locationRepository.create({
+      user: newUser,
+    });
+    await this.locationRepository.save(address);
+
     await this.verificationService.create({
       verificationType: VerificationType.ACCOUNTVERIFICATION,
       user: newUser,
@@ -118,6 +127,8 @@ export class AuthService {
 
     user.isEnabled = true;
     user.lastLogin = DateUtility.currentDate;
+
+    await this.userRepository.save(user);
 
     await this.emailService.sendRegistrationNotificationMail({
       to: user.email,

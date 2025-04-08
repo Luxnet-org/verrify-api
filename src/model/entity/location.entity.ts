@@ -1,4 +1,4 @@
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { User } from './user.entity';
 
@@ -22,6 +22,7 @@ export class LocationEntity extends Auditable {
   @Column({ type: 'character varying', nullable: true })
   locationPolygon: string;
 
-  @OneToOne(() => User, (user) => user.id)
+  @OneToOne(() => User, (user) => user.address)
+  @JoinColumn()
   user: User;
 }

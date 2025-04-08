@@ -1,4 +1,5 @@
 import * as Joi from 'joi';
+import * as process from 'node:process';
 
 export interface ConfigInterface {
   app: {
@@ -34,6 +35,11 @@ export interface ConfigInterface {
   logs: {
     filePath: string;
   };
+  cloudinary: {
+    cloudName: string;
+    apiKey: string;
+    apiSecret: string;
+  };
 }
 
 export const validationSchema = Joi.object({
@@ -62,6 +68,10 @@ export const validationSchema = Joi.object({
   VERIFICATION_EXPIRE: Joi.number().required(),
 
   LOG_FILE_PATH: Joi.string().required(),
+
+  CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+  CLOUDINARY_API_KEY: Joi.string().required(),
+  CLOUDINARY_API_SECRET: Joi.string().required(),
 });
 
 export const configuration = (): ConfigInterface => ({
@@ -97,5 +107,10 @@ export const configuration = (): ConfigInterface => ({
   },
   logs: {
     filePath: process.env.LOG_FILE_PATH!,
+  },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME!,
+    apiKey: process.env.CLOUDINARY_API_KEY!,
+    apiSecret: process.env.CLOUDINARY_API_SECRET!,
   },
 });

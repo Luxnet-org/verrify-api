@@ -26,6 +26,10 @@ import { MailerModule, MailerOptions } from '@nestjs-modules/mailer';
 import { VerificationService } from './service/verification/verification.service';
 import { EmailEvent } from './service/email/email-event.service';
 import { AuthController } from './controller/auth.controller';
+import { FileService } from './service/file/file.service';
+import { CloudinaryProvider } from './service/file/cloudinary.provider';
+import { FileController } from './controller/file.controller';
+import { UserController } from './controller/user.controller';
 
 @Module({
   imports: [
@@ -118,6 +122,7 @@ import { AuthController } from './controller/auth.controller';
         };
       },
     }),
+
     MyConfigModule,
     TypeOrmModule.forFeature([
       User,
@@ -127,7 +132,7 @@ import { AuthController } from './controller/auth.controller';
       Verification,
     ]),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, FileController, UserController],
   providers: [
     {
       provide: APP_GUARD,
@@ -147,6 +152,9 @@ import { AuthController } from './controller/auth.controller';
     RbacService,
     VerificationService,
     EmailEvent,
+    FileService,
+    CloudinaryProvider,
+    FileService,
   ],
   exports: [RbacService],
 })

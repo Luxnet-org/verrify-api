@@ -1,29 +1,30 @@
 import { UserRole } from '../enum/role.enum';
+import { DateDto } from '../../utility/date.dto';
 
-export class UserDto {
+export class UserDto extends DateDto {
   firstName: string;
 
-  lastName: string;
+  lastName: string | null;
 
-  dob: Date;
+  dob: Date | null;
 
   role: UserRole;
 
-  username: string;
+  username: string | null;
 
   email: string;
 
-  phoneNumber: string;
+  phoneNumber: string | null;
 
-  address: string;
+  address: string | null;
 
-  city: string;
+  city: string | null;
 
-  state: string;
+  state: string | null;
 
-  lastLogin: Date;
+  lastLogin: Date | null;
 
-  profileImage: string;
+  profileImage: string | null;
 
   is2fa: boolean;
 
