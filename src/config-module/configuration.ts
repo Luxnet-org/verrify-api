@@ -5,6 +5,7 @@ export interface ConfigInterface {
   app: {
     env: 'dev' | 'prod' | 'test';
     frontendHost: string;
+    origin: string;
   };
   database: {
     username: string;
@@ -45,6 +46,7 @@ export interface ConfigInterface {
 export const validationSchema = Joi.object({
   APP_PROFILE: Joi.string().valid('dev', 'prod', 'test').default('dev'),
   FRONTEND_HOST: Joi.string().required(),
+  ORIGIN: Joi.string().required(),
 
   DB_USERNAME: Joi.string().required(),
   DB_PASSWORD: Joi.string().required(),
@@ -78,6 +80,7 @@ export const configuration = (): ConfigInterface => ({
   app: {
     env: (process.env.APP_PROFILE || 'dev') as ConfigInterface['app']['env'],
     frontendHost: process.env.FRONTEND_HOST!,
+    origin: process.env.ORIGIN!,
   },
   database: {
     username: process.env.DB_USERNAME!,
