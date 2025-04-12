@@ -65,6 +65,7 @@ export class AuthService {
     }
 
     if (user && !user.isEnabled) {
+      await this.locationRepository.remove(user.address);
       await this.userRepository.remove(user);
     }
 
