@@ -5,7 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from '../../config-module/configuration';
 import { DateUtility } from '../../utility/date-utility';
 import { HttpService } from '@nestjs/axios';
-import { catchError } from 'rxjs';
 
 @Injectable()
 export class StayAlive {
@@ -18,7 +17,7 @@ export class StayAlive {
     private readonly httpService: HttpService,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async pingServer(): Promise<void> {
     try {
       const origin: string = this.configService.get('app.origin', {
