@@ -58,6 +58,7 @@ export class AuthService {
       where: {
         email,
       },
+      relations: ['address'],
     });
 
     if (user && user.isEnabled) {
