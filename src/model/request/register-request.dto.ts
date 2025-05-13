@@ -19,12 +19,6 @@ export class RegisterRequestDto {
   @IsNotEmpty()
   lastName: string;
 
-  @ApiPropertyOptional()
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  organizationName: string;
-
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
