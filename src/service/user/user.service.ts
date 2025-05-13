@@ -200,7 +200,7 @@ export class UserService {
       dob: user.dob,
       phoneNumber: user.phoneNumber,
       address: user.address.address ?? null,
-      city: user.address.address,
+      city: user.address.city,
       state: user.address.state,
       lastLogin: user.lastLogin,
       profileImage: user.profileImage ? user.profileImage.url : null,

@@ -18,6 +18,7 @@ import { FileType } from '../../model/enum/file-type.enum';
 import { User } from '../../model/entity/user.entity';
 import { UploadFileRequestDto } from './file-request.dto';
 import { FileResponseDto } from './file-response.dto';
+import { Company } from '../../model/entity/company.entity';
 
 @Injectable()
 export class FileService {
@@ -105,11 +106,19 @@ export class FileService {
         case FileType.PROFILE_PICTURE:
           fileEntity.user = entity as unknown as User;
           break;
+        case FileType.PROOF_OF_ADDRESS:
+          fileEntity.companyAddressFile = entity as unknown as Company;
+          break;
+        case FileType.COMPANY_PROFILE_PICTURE:
+          fileEntity.companyProfileImage = entity as unknown as Company;
+          break;
         default:
           break;
       }
     } else {
       fileEntity.user = null;
+      fileEntity.companyProfileImage = null;
+      fileEntity.companyProfileImage = null;
     }
 
     const updatedFile: FileEntity = await this.fileRepository.save(fileEntity);

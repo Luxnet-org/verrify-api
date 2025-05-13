@@ -1,4 +1,4 @@
-import { Entity, JoinColumn } from 'typeorm';
+import { Entity } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { UserRole } from '../enum/role.enum';
 import { FileEntity } from './file.entity';

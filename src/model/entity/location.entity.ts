@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { User } from './user.entity';
+import { Company } from './company.entity';
 
 @Entity('location')
 export class LocationEntity extends Auditable {
@@ -25,4 +26,8 @@ export class LocationEntity extends Auditable {
   @OneToOne(() => User, (user) => user.address)
   @JoinColumn()
   user: User;
+
+  @OneToOne(() => Company, (company) => company.address)
+  @JoinColumn()
+  company: Company;
 }

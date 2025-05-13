@@ -33,6 +33,9 @@ import { UserController } from './controller/user.controller';
 import { StayAlive } from './service/stayAlive/stay-alive.service';
 import { HttpModule } from '@nestjs/axios';
 import { ScheduleModule } from '@nestjs/schedule';
+import { Company } from './model/entity/company.entity';
+import { CompanyService } from './service/company/company.service';
+import { CompanyController } from './controller/company.controller';
 
 @Module({
   imports: [
@@ -133,11 +136,17 @@ import { ScheduleModule } from '@nestjs/schedule';
       Token,
       FileEntity,
       Verification,
+      Company,
     ]),
     HttpModule,
     ScheduleModule.forRoot({}),
   ],
-  controllers: [AuthController, FileController, UserController],
+  controllers: [
+    AuthController,
+    FileController,
+    UserController,
+    CompanyController,
+  ],
   providers: [
     {
       provide: APP_GUARD,
@@ -161,6 +170,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CloudinaryProvider,
     FileService,
     StayAlive,
+    CompanyService,
   ],
   exports: [RbacService],
 })

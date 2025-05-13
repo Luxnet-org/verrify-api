@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from 'src/config-module/configuration';
-import { MyLoggerService } from '../logger/my-logger.service'
+import { MyLoggerService } from '../logger/my-logger.service';
 import * as amqplib from 'amqplib';
 
 export interface QueueConfig {
@@ -39,43 +39,60 @@ export class RabbitMQService implements OnModuleInit {
   constructor(private readonly configService: ConfigService<ConfigInterface>) {}
 
   async onModuleInit() {
-    try {
-      this.connection = await amqplib.connect(
-        this.configService.get('queue.rabbitMQUri', { infer: true }),
-      );
-      this.channel = await this.connection.createChannel();
+    const maxRetries = 5;
+    const retryDelayMs = 3000; // 3 seconds
+    let attempts = 0;
 
-      await this.channel.assertExchange(
-        this.rabbitMQConfig.queueExchange,
-        'topic',
-        {
-          durable: true,
-        },
-      );
-      await this.channel.assertExchange(
-        this.rabbitMQConfig.retryExchange,
-        'topic',
-        {
-          durable: true,
-        },
-      );
-      await this.channel.assertExchange(
-        this.rabbitMQConfig.deadLetterExchange,
-        'topic',
-        {
-          durable: true,
-        },
-      );
+    while (attempts < maxRetries) {
+      try {
+        this.connection = await amqplib.connect(
+          this.configService.get('queue.rabbitMQUri', { infer: true }),
+        );
+        this.channel = await this.connection.createChannel();
 
-      for (const queue of this.rabbitMQConfig.queues) {
-        await this.configureQueue(queue);
-        await this.consumeQueue(queue.name, queue.routingKey, queue.handler);
+        await this.channel.assertExchange(
+          this.rabbitMQConfig.queueExchange,
+          'topic',
+          { durable: true },
+        );
+        await this.channel.assertExchange(
+          this.rabbitMQConfig.retryExchange,
+          'topic',
+          { durable: true },
+        );
+        await this.channel.assertExchange(
+          this.rabbitMQConfig.deadLetterExchange,
+          'topic',
+          { durable: true },
+        );
+
+        for (const queue of this.rabbitMQConfig.queues) {
+          await this.configureQueue(queue);
+          await this.consumeQueue(queue.name, queue.routingKey, queue.handler);
+        }
+
+        this.logger.log(
+          'RabbitMQ connected and queues configured',
+          RabbitMQService.name,
+        );
+        break;
+      } catch (error) {
+        attempts++;
+        this.logger.error(
+          `Failed to configure RabbitMQ queues (attempt ${attempts}/${maxRetries}): ${error.message}`,
+          RabbitMQService.name,
+        );
+
+        if (attempts >= maxRetries) {
+          throw new Error(
+            'Failed to connect to RabbitMQ after several attempts',
+          );
+        }
+
+        setTimeout(() => {
+          this.logger.log('Waiting to retry');
+        }, retryDelayMs);
       }
-    } catch (error) {
-      this.logger.log(
-        `Failed to configure RabbitMQ queues: ${error.message}`,
-        RabbitMQService.name,
-      );
     }
   }
 
