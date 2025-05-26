@@ -351,13 +351,13 @@ export class CompanyService {
 
     const user: User = await this.userService.findById(userId);
 
-    if (company.user.id !== user.id && user.role !== UserRole.ADMIN) {
+    if (company.user.id !== user.id && user.role === UserRole.USER) {
       throw new UnauthorizedException(
         'Unauthorized to modify verification status of this company profile',
       );
     }
 
-    if (company.user.id === user.id) {
+    if (company.user.id === user.id && user.role !== UserRole.ADMIN) {
       if (
         !company.name ||
         !company.description ||
@@ -371,7 +371,6 @@ export class CompanyService {
       }
 
       company.companyVerificationStatus = CompanyVerificationStatus.PENDING;
-      company.verificationMessage = verificationMessage;
       await this.companyRepository.save(company);
 
       this.logger.log(`User requested verification for company profile`);
@@ -385,6 +384,7 @@ export class CompanyService {
     }
 
     company.companyVerificationStatus = verificationStatus;
+    company.verificationMessage = verificationMessage;
     await this.companyRepository.save(company);
 
     this.logger.log(
