@@ -357,7 +357,7 @@ export class CompanyService {
       );
     }
 
-    if (company.user.id === user.id && user.role !== UserRole.ADMIN) {
+    if (company.user.id === user.id && user.role === UserRole.USER) {
       if (
         !company.name ||
         !company.description ||
