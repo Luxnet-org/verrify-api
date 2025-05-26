@@ -11,7 +11,7 @@ import {
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FileService } from '../service/file/file.service';
 import { memoryStorage } from 'multer';
-import { FileResponseDto } from '../service/file/file-response.dto';
+import { FileResponseDto } from '../model/response/file-response.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse } from '../utility/api-response';
 import { SwaggerApiResponseData } from '../common/decorator/swagger.decorator';

@@ -47,7 +47,7 @@ export class PaginationQueryDto {
   })
   @IsOptional()
   @IsString()
-  search?: string = '';
+  search?: string = AppConstants.PAGE_SEARCH;
 
   @ApiPropertyOptional({
     type: 'number',
@@ -58,7 +58,7 @@ export class PaginationQueryDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page?: number = AppConstants.PAGE;
 
   @ApiPropertyOptional({
     type: 'integer',
@@ -70,7 +70,7 @@ export class PaginationQueryDto {
   @IsInt()
   @IsPositive()
   @Min(1)
-  limit?: number = 10;
+  limit?: number = AppConstants.PAGE_LIMIT;
 
   @ApiPropertyOptional({
     type: 'string',
@@ -79,7 +79,7 @@ export class PaginationQueryDto {
   })
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  sortBy?: string = AppConstants.PAGE_SORT;
 
   @ApiPropertyOptional({
     type: 'string',
@@ -88,7 +88,7 @@ export class PaginationQueryDto {
   })
   @IsOptional()
   @IsIn(['ASC', 'DESC'])
-  order?: 'ASC' | 'DESC' = 'ASC';
+  order?: 'ASC' | 'DESC' = AppConstants.PAGE_ORDER;
 }
 
 export class PaginationAndSorting {
@@ -140,10 +140,13 @@ export class PaginationAndSorting {
     total: number,
     queryDto: PaginationQueryDto,
     convertToDto: (data: T) => R,
+    isBypass: boolean = false,
   ): PaginationAndSortingResult<R> {
     const { page = AppConstants.PAGE, limit = AppConstants.PAGE_LIMIT } =
       queryDto;
-    const validatedLimit = Math.min(limit, AppConstants.PAGE_LIMIT);
+    const validatedLimit = !isBypass
+      ? Math.min(limit, AppConstants.PAGE_LIMIT)
+      : limit;
     const totalPages = Math.ceil(total / validatedLimit);
 
     const newData = data.map((item) => convertToDto(item));

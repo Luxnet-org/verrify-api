@@ -24,7 +24,7 @@ import {
 } from '../../utility/pagination-and-sorting';
 import { CompanyLookupResponse } from '../../model/response/company-lookup-response.dto';
 import { CompanySearchQueryDto } from '../../model/request/company-search-query.dto';
-import { UpdateVerificationStatusDto } from './update-verification-status.dto';
+import { UpdateVerificationStatusDto } from '../../model/request/update-verification-status.dto';
 
 @Injectable()
 export class CompanyService {
@@ -65,6 +65,7 @@ export class CompanyService {
           companyVerificationStatus: company.companyVerificationStatus,
           proofOfAddressType: company.proofOfAddressType,
           profileImage: company.profileImage ? company.profileImage.url : null,
+          name: company.name,
         };
       },
     );
@@ -111,6 +112,24 @@ export class CompanyService {
     const company: Company | null = await this.companyRepository.findOne({
       where: {
         id: companyId,
+      },
+      relations,
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company profile not found');
+    }
+
+    return company;
+  }
+
+  async findByUserId(
+    userId: string,
+    relations: string[] = [],
+  ): Promise<Company> {
+    const company: Company | null = await this.companyRepository.findOne({
+      where: {
+        user: { id: userId },
       },
       relations,
     });

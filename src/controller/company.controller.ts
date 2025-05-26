@@ -28,7 +28,7 @@ import { Request } from 'express';
 import { UserInfo } from '../common/guards/auth.guard';
 import { CompanyProfileRequestDto } from '../model/request/create-company-profile.dto';
 import { UpdateCompanyProfileDto } from '../model/request/update-company-profile.dto';
-import { UpdateVerificationStatusDto } from '../service/company/update-verification-status.dto';
+import { UpdateVerificationStatusDto } from '../model/request/update-verification-status.dto';
 
 @ApiTags('Real Estate Company API')
 @Controller('company')

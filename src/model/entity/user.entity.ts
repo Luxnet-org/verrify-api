@@ -4,6 +4,7 @@ import { UserRole } from '../enum/role.enum';
 import { FileEntity } from './file.entity';
 import { Column, OneToOne } from 'typeorm';
 import { LocationEntity } from './location.entity';
+import { Company } from './company.entity';
 
 @Entity('users')
 export class User extends Auditable {
@@ -60,4 +61,7 @@ export class User extends Auditable {
     cascade: true,
   })
   address: LocationEntity;
+
+  @OneToOne(() => Company, (company) => company.user)
+  company: Company;
 }

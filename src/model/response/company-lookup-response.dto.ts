@@ -14,4 +14,7 @@ export class CompanyLookupResponse {
 
   @ApiProperty()
   profileImage: string | null;
+
+  @ApiProperty()
+  name: string;
 }

@@ -16,9 +16,9 @@ import { v2 as CloudinaryAPI } from 'cloudinary';
 import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { FileType } from '../../model/enum/file-type.enum';
 import { User } from '../../model/entity/user.entity';
-import { UploadFileRequestDto } from './file-request.dto';
-import { FileResponseDto } from './file-response.dto';
+import { FileResponseDto } from '../../model/response/file-response.dto';
 import { Company } from '../../model/entity/company.entity';
+import { Property } from '../../model/entity/property.entity';
 
 @Injectable()
 export class FileService {
@@ -80,6 +80,16 @@ export class FileService {
       where: {
         url,
       },
+      relations: [
+        'user',
+        'companyAddressFile',
+        'companyProfileImage',
+        'certificationOfOccupancy',
+        'contractOfSale',
+        'surveyPlan',
+        'letterOfIntent',
+        'deedOfConveyance',
+      ],
     });
 
     if (!findFile) {
@@ -104,13 +114,76 @@ export class FileService {
     if (entity) {
       switch (fileType) {
         case FileType.PROFILE_PICTURE:
+          if (fileEntity.user) {
+            throw new BadRequestException(
+              'File is already associated with user',
+            );
+          }
+
           fileEntity.user = entity as unknown as User;
           break;
         case FileType.PROOF_OF_ADDRESS:
+          if (fileEntity.companyAddressFile) {
+            throw new BadRequestException(
+              'File is already associated with company address file',
+            );
+          }
+
           fileEntity.companyAddressFile = entity as unknown as Company;
           break;
         case FileType.COMPANY_PROFILE_PICTURE:
+          if (fileEntity.companyProfileImage) {
+            throw new BadRequestException(
+              'File is already associated with company profile image',
+            );
+          }
+
           fileEntity.companyProfileImage = entity as unknown as Company;
+          break;
+        case FileType.CERTIFICATE_OF_OCCUPANCY:
+          if (fileEntity.certificationOfOccupancy) {
+            throw new BadRequestException(
+              'File is already associated with property',
+            );
+          }
+
+          fileEntity.certificationOfOccupancy = entity as unknown as Property;
+          break;
+        case FileType.DEED_OF_CONVEYANCE:
+          if (fileEntity.deedOfConveyance) {
+            throw new BadRequestException(
+              'File is already associated with property',
+            );
+          }
+
+          fileEntity.deedOfConveyance = entity as unknown as Property;
+          break;
+        case FileType.SURVEY_PLAN:
+          if (fileEntity.surveyPlan) {
+            throw new BadRequestException(
+              'File is already associated with property',
+            );
+          }
+
+          fileEntity.surveyPlan = entity as unknown as Property;
+          break;
+        case FileType.CONTRACT_OF_SALE:
+          if (fileEntity.contractOfSale) {
+            throw new BadRequestException(
+              'File is already associated with property',
+            );
+          }
+
+          fileEntity.contractOfSale = entity as unknown as Property;
+          break;
+        case FileType.LETTER_OF_INTENT:
+          if (fileEntity.letterOfIntent) {
+            throw new BadRequestException(
+              'File is already associated with property',
+            );
+          }
+
+          fileEntity.letterOfIntent = entity as unknown as Property;
           break;
         default:
           break;

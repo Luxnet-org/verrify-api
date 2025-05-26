@@ -3,6 +3,7 @@ import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
 import { FileType } from '../enum/file-type.enum';
 import { User } from './user.entity';
 import { Company } from './company.entity';
+import { Property } from './property.entity';
 
 @Entity('file')
 export class FileEntity extends Auditable {
@@ -26,4 +27,24 @@ export class FileEntity extends Auditable {
   @OneToOne(() => Company, (company) => company.profileImage)
   @JoinColumn()
   companyProfileImage: Company | null;
+
+  @OneToOne(() => Property, (property) => property.certificationOfOccupancy)
+  @JoinColumn()
+  certificationOfOccupancy: Property | null;
+
+  @OneToOne(() => Property, (property) => property.contractOfSale)
+  @JoinColumn()
+  contractOfSale: Property | null;
+
+  @OneToOne(() => Property, (property) => property.surveyPlan)
+  @JoinColumn()
+  surveyPlan: Property | null;
+
+  @OneToOne(() => Property, (property) => property.letterOfIntent)
+  @JoinColumn()
+  letterOfIntent: Property | null;
+
+  @OneToOne(() => Property, (property) => property.deedOfConveyance)
+  @JoinColumn()
+  deedOfConveyance: Property | null;
 }

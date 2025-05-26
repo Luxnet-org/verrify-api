@@ -36,6 +36,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { Company } from './model/entity/company.entity';
 import { CompanyService } from './service/company/company.service';
 import { CompanyController } from './controller/company.controller';
+import { Property } from './model/entity/property.entity';
+import { PropertyController } from './controller/property.controller';
+import { PropertyService } from './service/property/property.service';
 
 @Module({
   imports: [
@@ -137,6 +140,7 @@ import { CompanyController } from './controller/company.controller';
       FileEntity,
       Verification,
       Company,
+      Property,
     ]),
     HttpModule,
     ScheduleModule.forRoot({}),
@@ -146,6 +150,7 @@ import { CompanyController } from './controller/company.controller';
     FileController,
     UserController,
     CompanyController,
+    PropertyController,
   ],
   providers: [
     {
@@ -171,6 +176,7 @@ import { CompanyController } from './controller/company.controller';
     FileService,
     StayAlive,
     CompanyService,
+    PropertyService,
   ],
   exports: [RbacService],
 })

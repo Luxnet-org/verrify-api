@@ -37,7 +37,7 @@ export class Company extends Auditable {
   })
   address: LocationEntity;
 
-  @OneToOne(() => User)
+  @OneToOne(() => User, (user) => user.company)
   @JoinColumn()
   user: User;
 }
