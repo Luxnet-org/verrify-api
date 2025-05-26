@@ -35,6 +35,7 @@ import {
   ViewportQueryDto,
 } from 'src/model/request/property-view-query.dto';
 import { PropertyLookupResponseDto } from '../../model/response/property-lookup-response.dto';
+import { CompanyVerificationStatus } from '../../model/enum/company-verification-status.enum';
 
 @Injectable()
 export class PropertyService {
@@ -57,6 +58,12 @@ export class PropertyService {
     propertyRequest: CreatePropertyRequestDto,
   ): Promise<PropertyDto> {
     const company: Company = await this.companyService.findByUserId(userId);
+    if (
+      company.companyVerificationStatus !== CompanyVerificationStatus.VERIFIED
+    )
+      throw new BadRequestException(
+        'Company verification status is not verified',
+      );
 
     if (
       propertyRequest.isSubmitted &&
@@ -158,6 +165,14 @@ export class PropertyService {
       'location',
       'company.user',
     ]);
+
+    if (
+      property.company.companyVerificationStatus !==
+      CompanyVerificationStatus.VERIFIED
+    )
+      throw new BadRequestException(
+        'Company verification status is not verified',
+      );
 
     if (property.company.user.id !== userId) {
       throw new UnauthorizedException(
