@@ -391,6 +391,14 @@ export class PropertyService {
     }
 
     if (!property.isSubProperty) {
+      if (propertyRequest.users !== null) {
+        property.users = await Promise.all(
+          propertyRequest.users.map(async (user) => {
+            return this.userService.findByEmail(user);
+          }),
+        );
+      }
+
       if (propertyRequest.certificationOfOccupancy !== null) {
         if (property.certificationOfOccupancy) {
           await this.fileService.updateFile(

@@ -90,5 +90,6 @@ export class UpdatePropertyRequestDto {
   @IsNotEmpty({ each: true })
   @ArrayNotEmpty()
   @IsOptional()
+  @ApiPropertyOptional()
   users: string[];
 }
