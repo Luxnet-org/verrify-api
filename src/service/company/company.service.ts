@@ -47,8 +47,8 @@ export class CompanyService {
     const findOptions = PaginationAndSorting.createFindOptions<Company>(
       'name',
       searchDto,
-      { companyVerificationStatus: searchDto.verificationStatus },
       {},
+      { companyVerificationStatus: searchDto.verificationStatus },
       ['proofOfAddress', 'profileImage'],
     );
 

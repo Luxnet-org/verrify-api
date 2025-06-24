@@ -36,6 +36,7 @@ import {
   NearbyQueryDto,
   ViewportQueryDto,
 } from '../model/request/property-view-query.dto';
+import { PropertySearchQueryDto } from '../model/request/property-search.dto';
 
 @ApiTags('Property API')
 @Controller('property')
@@ -86,6 +87,31 @@ export class PropertyController {
     return ApiResponse.success(response, HttpStatus.CREATED);
   }
 
+  @RequireRoles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Api endpoint to update property verification status',
+  })
+  @SwaggerApiResponseData({
+    type: 'string',
+    status: HttpStatus.OK,
+  })
+  @Patch('/status/:id')
+  @HttpCode(HttpStatus.OK)
+  async updatePropertyStatus(
+    @Param('id') propertyId: string,
+    @Body() statusDto: UpdatePropertyStatusDto,
+    @Req() request: Request,
+  ): Promise<ApiResponse<string>> {
+    const userInfo: UserInfo = request.user!;
+    const response: string = await this.propertyService.updatePropertyStatus(
+      propertyId,
+      userInfo.userId,
+      statusDto,
+    );
+
+    return ApiResponse.success(response, HttpStatus.OK);
+  }
+
   @ApiOperation({ summary: 'Api endpoint to update property' })
   @SwaggerApiResponseData({
     dataClass: PropertyDto,
@@ -108,27 +134,21 @@ export class PropertyController {
     return ApiResponse.success(response, HttpStatus.OK);
   }
 
-  @RequireRoles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Api endpoint to update property verification status',
+    summary: 'Api endpoint to get properties by admin',
   })
-  @SwaggerApiResponseData({
-    type: 'string',
+  @SwaggerApiPaginatedResponseData({
+    dataClass: PropertyLookupResponseDto,
     status: HttpStatus.OK,
   })
-  @Patch('/status/:id')
-  @HttpCode(HttpStatus.OK)
-  async updatePropertyStatus(
-    @Param('id') propertyId: string,
-    @Body() statusDto: UpdatePropertyStatusDto,
-    @Req() request: Request,
-  ): Promise<ApiResponse<string>> {
-    const userInfo: UserInfo = request.user!;
-    const response: string = await this.propertyService.updatePropertyStatus(
-      propertyId,
-      userInfo.userId,
-      statusDto,
-    );
+  @Get('/get')
+  async getAll(
+    @Query() searchQuery: PropertySearchQueryDto,
+  ): Promise<
+    ApiResponse<PaginationAndSortingResult<PropertyLookupResponseDto>>
+  > {
+    const response: PaginationAndSortingResult<PropertyLookupResponseDto> =
+      await this.propertyService.getAllProperties(searchQuery);
 
     return ApiResponse.success(response, HttpStatus.OK);
   }

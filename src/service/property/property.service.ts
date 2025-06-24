@@ -36,6 +36,7 @@ import {
 } from 'src/model/request/property-view-query.dto';
 import { PropertyLookupResponseDto } from '../../model/response/property-lookup-response.dto';
 import { CompanyVerificationStatus } from '../../model/enum/company-verification-status.enum';
+import { PropertySearchQueryDto } from '../../model/request/property-search.dto';
 
 @Injectable()
 export class PropertyService {
@@ -493,6 +494,33 @@ export class PropertyService {
 
     this.logger.log(`Updated property status for property: ${propertyId}`);
     return `Property ${updatedProperty.id} updated with status ${updatedProperty.propertyVerificationStatus}`;
+  }
+
+  async getAllProperties(
+    searchQuery: PropertySearchQueryDto,
+  ): Promise<PaginationAndSortingResult<PropertyLookupResponseDto>> {
+    const findOptions = PaginationAndSorting.createFindOptions<Property>(
+      'name',
+      searchQuery,
+      {},
+      {
+        propertyVerificationStatus: searchQuery.verificationStatus,
+        propertyType: searchQuery.propertyType,
+        isSubProperty: searchQuery.isSubProperty,
+        isPublic: searchQuery.isPublic,
+      },
+      ['company', 'users', 'location'],
+    );
+
+    const [properties, count] =
+      await this.propertyRepository.findAndCount(findOptions);
+
+    return PaginationAndSorting.getPaginateResult(
+      properties,
+      count,
+      searchQuery,
+      (property) => this.convertToLookupResponse(property, true),
+    );
   }
 
   async getOne(propertyId: string, userId: string): Promise<PropertyDto> {

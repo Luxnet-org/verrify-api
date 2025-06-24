@@ -23,7 +23,6 @@ import {
   SwaggerApiPaginatedResponseData,
   SwaggerApiResponseData,
 } from '../common/decorator/swagger.decorator';
-import { UserDto } from '../model/dto/user.dto';
 import { Request } from 'express';
 import { UserInfo } from '../common/guards/auth.guard';
 import { CompanyProfileRequestDto } from '../model/request/create-company-profile.dto';
