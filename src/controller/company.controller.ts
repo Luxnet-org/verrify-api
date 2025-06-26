@@ -112,6 +112,7 @@ export class CompanyController {
     return ApiResponse.success(response, HttpStatus.OK);
   }
 
+  @RequireRoles(UserRole.ADMIN)
   @ApiOperation({
     summary:
       'Api endpoint to update company profile for user verification status',

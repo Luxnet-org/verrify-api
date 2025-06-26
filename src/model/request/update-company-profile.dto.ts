@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { CompanyVerificationStatus } from '../enum/company-verification-status.enum';
 import { AddressFileTypeEnum } from '../enum/address-file-type.enum';
 
@@ -48,4 +54,9 @@ export class UpdateCompanyProfileDto {
   @IsString()
   @IsOptional()
   state: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiPropertyOptional()
+  isSubmitted: boolean;
 }

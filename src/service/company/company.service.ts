@@ -173,7 +173,9 @@ export class CompanyService {
       name: companyDto.name,
       description: companyDto.description,
       phoneNumber: companyDto.phoneNumber,
-      companyVerificationStatus: CompanyVerificationStatus.NOT_VERIFIED,
+      companyVerificationStatus: companyDto.isSubmitted
+        ? CompanyVerificationStatus.PENDING
+        : CompanyVerificationStatus.NOT_VERIFIED,
       proofOfAddressType: companyDto.proofOfAddressType,
       user,
     });
@@ -228,6 +230,7 @@ export class CompanyService {
       state,
       name,
       description,
+      isSubmitted,
     }: UpdateCompanyProfileDto = companyDto;
 
     let company: Company = await this.findById(companyId, [
@@ -247,6 +250,10 @@ export class CompanyService {
 
     if (description) {
       company.description = description;
+    }
+
+    if (isSubmitted) {
+      company.companyVerificationStatus = CompanyVerificationStatus.PENDING;
     }
 
     if (profileImage) {
@@ -348,34 +355,6 @@ export class CompanyService {
       'address',
       'user',
     ]);
-
-    const user: User = await this.userService.findById(userId);
-
-    if (company.user.id !== user.id && user.role === UserRole.USER) {
-      throw new UnauthorizedException(
-        'Unauthorized to modify verification status of this company profile',
-      );
-    }
-
-    if (company.user.id === user.id && user.role === UserRole.USER) {
-      if (
-        !company.name ||
-        !company.description ||
-        !company.phoneNumber ||
-        !company.proofOfAddress ||
-        !company.address
-      ) {
-        throw new BadRequestException(
-          'To request for verification for company profile: fill name, description, phone number, proof Of Address file and address details',
-        );
-      }
-
-      company.companyVerificationStatus = CompanyVerificationStatus.PENDING;
-      await this.companyRepository.save(company);
-
-      this.logger.log(`User requested verification for company profile`);
-      return 'Requested Verification Successfully';
-    }
 
     if (!verificationStatus || !verificationMessage) {
       throw new BadRequestException(
