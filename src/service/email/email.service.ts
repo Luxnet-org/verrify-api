@@ -72,4 +72,22 @@ export class EmailService {
       emailRequest.context,
     );
   }
+
+  async sendContactMeReply(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      'Thank you for Contacting Us',
+      'contact-respond-email-template',
+      emailRequest.context,
+    );
+  }
+
+  async sendContactMeAdminRequest(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      'Contact Me Message',
+      'contact-admin-email-template',
+      emailRequest.context,
+    );
+  }
 }

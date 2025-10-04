@@ -1,0 +1,3 @@
+export enum ContactMeEventType {
+  SUBSCRIBENEWSLETTER = 'SUBSCRIBENEWSLETTER',
+}

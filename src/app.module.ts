@@ -39,6 +39,13 @@ import { CompanyController } from './controller/company.controller';
 import { Property } from './model/entity/property.entity';
 import { PropertyController } from './controller/property.controller';
 import { PropertyService } from './service/property/property.service';
+import { ArticleService } from './service/article/article.service';
+import { Article } from './model/entity/article.entity';
+import { ArticleController } from './controller/article.controller';
+import { ContactUsService } from './service/contact-us/contact-us.service';
+import { ContactUsController } from './controller/contact-us.controller';
+import { ContactEventService } from './service/contact-us/contact-event.service';
+import { NewsletterService } from './service/contact-us/newsletter.service';
 
 @Module({
   imports: [
@@ -141,6 +148,7 @@ import { PropertyService } from './service/property/property.service';
       Verification,
       Company,
       Property,
+      Article,
     ]),
     HttpModule,
     ScheduleModule.forRoot({}),
@@ -151,6 +159,8 @@ import { PropertyService } from './service/property/property.service';
     UserController,
     CompanyController,
     PropertyController,
+    ArticleController,
+    ContactUsController,
   ],
   providers: [
     {
@@ -177,6 +187,10 @@ import { PropertyService } from './service/property/property.service';
     StayAlive,
     CompanyService,
     PropertyService,
+    ArticleService,
+    ContactUsService,
+    ContactEventService,
+    NewsletterService,
   ],
   exports: [RbacService],
 })

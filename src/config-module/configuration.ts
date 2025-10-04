@@ -21,6 +21,7 @@ export interface ConfigInterface {
     host: string;
     port: number;
     sender: string;
+    adminEmail: string;
   };
   queue: {
     rabbitMQUri: string;
@@ -41,6 +42,12 @@ export interface ConfigInterface {
     apiKey: string;
     apiSecret: string;
   };
+  google: {
+    clientMail: string;
+    privateKey: string;
+    sheetsId: string;
+    sheetsName: string;
+  };
 }
 
 export const validationSchema = Joi.object({
@@ -60,6 +67,7 @@ export const validationSchema = Joi.object({
   EMAIL_HOST: Joi.string().required(),
   EMAIL_PORT: Joi.number().port().required(),
   EMAIL_SENDER: Joi.string().required(),
+  ADMIN_EMAIL: Joi.string().required(),
 
   RABBITMQ_URI: Joi.string().required(),
 
@@ -74,6 +82,11 @@ export const validationSchema = Joi.object({
   CLOUDINARY_CLOUD_NAME: Joi.string().required(),
   CLOUDINARY_API_KEY: Joi.string().required(),
   CLOUDINARY_API_SECRET: Joi.string().required(),
+
+  GOOGLE_CLIENT_EMAIL: Joi.string().required(),
+  GOOGLE_PRIVATE_KEY: Joi.string().required(),
+  GOOGLE_SHEET_ID: Joi.string().required(),
+  GOOGLE_SHEET_NAME: Joi.string().required(),
 });
 
 export const configuration = (): ConfigInterface => ({
@@ -96,6 +109,7 @@ export const configuration = (): ConfigInterface => ({
     host: process.env.EMAIL_HOST!,
     port: +process.env.EMAIL_PORT!,
     sender: process.env.EMAIL_SENDER!,
+    adminEmail: process.env.ADMIN_EMAIL!,
   },
   queue: {
     rabbitMQUri: process.env.RABBITMQ_URI!,
@@ -115,5 +129,11 @@ export const configuration = (): ConfigInterface => ({
     cloudName: process.env.CLOUDINARY_CLOUD_NAME!,
     apiKey: process.env.CLOUDINARY_API_KEY!,
     apiSecret: process.env.CLOUDINARY_API_SECRET!,
+  },
+  google: {
+    clientMail: process.env.GOOGLE_CLIENT_EMAIL!,
+    privateKey: process.env.GOOGLE_PRIVATE_KEY!,
+    sheetsId: process.env.GOOGLE_SHEET_ID!,
+    sheetsName: process.env.GOOGLE_SHEET_NAME!,
   },
 });

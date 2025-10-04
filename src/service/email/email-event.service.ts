@@ -25,18 +25,18 @@ export class EmailEvent implements OnModuleInit {
       handler: async (emailRequest: EmailRequest): Promise<void> => {
         if (emailRequest.type === EmailType.ACCOUNTVERIFICATION) {
           await this.emailService.sendAccountVerificationMail(emailRequest);
-        }
-
-        if (emailRequest.type === EmailType.ACCOUNTREGISTRATION) {
+        } else if (emailRequest.type === EmailType.ACCOUNTREGISTRATION) {
           await this.emailService.sendRegistrationNotificationMail(
             emailRequest,
           );
-        }
-
-        if (emailRequest.type === EmailType.PASSWORDRESET) {
+        } else if (emailRequest.type === EmailType.PASSWORDRESET) {
           await this.emailService.sendResetPasswordNotificationMail(
             emailRequest,
           );
+        } else if (emailRequest.type === EmailType.CONTACTMEREPLY) {
+          await this.emailService.sendContactMeReply(emailRequest);
+        } else if (emailRequest.type === EmailType.ADMINCONTACTMEREPLY) {
+          await this.emailService.sendContactMeAdminRequest(emailRequest);
         }
       },
     });

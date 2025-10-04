@@ -19,6 +19,7 @@ import { User } from '../../model/entity/user.entity';
 import { FileResponseDto } from '../../model/response/file-response.dto';
 import { Company } from '../../model/entity/company.entity';
 import { Property } from '../../model/entity/property.entity';
+import { Article } from '../../model/entity/article.entity';
 
 @Injectable()
 export class FileService {
@@ -89,6 +90,7 @@ export class FileService {
         'surveyPlan',
         'letterOfIntent',
         'deedOfConveyance',
+        'articleTitleImage',
       ],
     });
 
@@ -185,13 +187,28 @@ export class FileService {
 
           fileEntity.letterOfIntent = entity as unknown as Property;
           break;
+        case FileType.ARTICLE_TITLE_IMAGE:
+          if (fileEntity.articleTitleImage) {
+            throw new BadRequestException(
+              'File is already associated with property',
+            );
+          }
+
+          fileEntity.articleTitleImage = entity as unknown as Article;
+          break;
         default:
           break;
       }
     } else {
       fileEntity.user = null;
       fileEntity.companyProfileImage = null;
-      fileEntity.companyProfileImage = null;
+      fileEntity.certificationOfOccupancy = null;
+      fileEntity.deedOfConveyance = null;
+      fileEntity.surveyPlan = null;
+      fileEntity.contractOfSale = null;
+      fileEntity.certificationOfOccupancy = null;
+      fileEntity.articleTitleImage = null;
+      fileEntity.companyAddressFile = null;
     }
 
     const updatedFile: FileEntity = await this.fileRepository.save(fileEntity);

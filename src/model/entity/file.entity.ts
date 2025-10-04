@@ -4,6 +4,7 @@ import { FileType } from '../enum/file-type.enum';
 import { User } from './user.entity';
 import { Company } from './company.entity';
 import { Property } from './property.entity';
+import { Article } from './article.entity';
 
 @Entity('file')
 export class FileEntity extends Auditable {
@@ -47,4 +48,8 @@ export class FileEntity extends Auditable {
   @OneToOne(() => Property, (property) => property.deedOfConveyance)
   @JoinColumn()
   deedOfConveyance: Property | null;
+
+  @OneToOne(() => Article, (article) => article.titleImage)
+  @JoinColumn()
+  articleTitleImage: Article | null;
 }
