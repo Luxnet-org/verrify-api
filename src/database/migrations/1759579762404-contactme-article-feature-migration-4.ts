@@ -8,10 +8,10 @@ export class ContactmeArticleFeatureMigration41759579762404
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `DROP INDEX "public"."location_locationPolygon_idx"`,
-    ),
-      await queryRunner.query(
-        `CREATE TYPE "public"."article_articlestatus_enum" AS ENUM('DRAFT', 'PUBLISHED')`,
-      );
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."article_articlestatus_enum" AS ENUM('DRAFT', 'PUBLISHED')`,
+    );
     await queryRunner.query(
       `CREATE TABLE "article" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "title" character varying NOT NULL, "description" text NOT NULL, "slug" character varying NOT NULL, "content" jsonb NOT NULL, "publishedAt" TIMESTAMP WITH TIME ZONE, "articleStatus" "public"."article_articlestatus_enum" NOT NULL, "featuredFlag" boolean NOT NULL DEFAULT false, "createdUserId" uuid, CONSTRAINT "UQ_0ab85f4be07b22d79906671d72f" UNIQUE ("slug"), CONSTRAINT "REL_f9abd67735499ed02df43f30f1" UNIQUE ("createdUserId"), CONSTRAINT "PK_40808690eb7b915046558c0f81b" PRIMARY KEY ("id"))`,
     );
