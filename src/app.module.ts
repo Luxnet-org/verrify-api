@@ -46,6 +46,7 @@ import { ContactUsService } from './service/contact-us/contact-us.service';
 import { ContactUsController } from './controller/contact-us.controller';
 import { ContactEventService } from './service/contact-us/contact-event.service';
 import { NewsletterService } from './service/contact-us/newsletter.service';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -138,6 +139,13 @@ import { NewsletterService } from './service/contact-us/newsletter.service';
         };
       },
     }),
+
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
 
     MyConfigModule,
     TypeOrmModule.forFeature([

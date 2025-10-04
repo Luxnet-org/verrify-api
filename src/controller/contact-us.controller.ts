@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { ContactUsService } from 'src/service/contact-us/contact-us.service';
 import { SubscribeNewsletterRequestDto } from '../model/request/subscribe-newsletter-request.dto';
@@ -13,9 +14,11 @@ import { Public } from '../common/decorator/public.decorator';
 import { ApiResponse } from '../utility/api-response';
 import { SwaggerApiResponseData } from '../common/decorator/swagger.decorator';
 import { ContactUsRequestDto } from '../model/request/contact-us-request.dto';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 @ApiTags('Contact Us API')
 @Controller('contact-us')
+@UseGuards(ThrottlerGuard)
 export class ContactUsController {
   constructor(private readonly contactUsService: ContactUsService) {}
 

@@ -153,11 +153,11 @@ export class RabbitMQService implements OnModuleInit {
         routingKey,
         Buffer.from(JSON.stringify(data)),
       );
-      this.logger.log(`Email request published`, RabbitMQService.name);
+      this.logger.log(`Queue message request published`, RabbitMQService.name);
       return true;
     } catch (error) {
       this.logger.error(
-        `Failed to publish email request: ${error.message}`,
+        `Failed to publish queue message: ${error.message}`,
         RabbitMQService.name,
       );
       throw error;
@@ -176,11 +176,14 @@ export class RabbitMQService implements OnModuleInit {
 
         try {
           const data = JSON.parse(msg.content.toString());
-          this.logger.log(`Processing email`, RabbitMQService.name);
+          this.logger.log(`Processing queue message`, RabbitMQService.name);
 
           await callback(data);
           this.channel.ack(msg);
-          this.logger.log(`Email processed successfully`, RabbitMQService.name);
+          this.logger.log(
+            `Queue message processed successfully`,
+            RabbitMQService.name,
+          );
         } catch (error) {
           let retryCount = 0;
           const xDeath: amqplib.XDeath[] | undefined =
@@ -192,13 +195,13 @@ export class RabbitMQService implements OnModuleInit {
           if (retryCount < this.rabbitMQConfig.maxRetryAttempt) {
             this.channel.reject(msg, false);
             this.logger.warn(
-              `Email processing failed, sending to retry queue. Attempt ${retryCount + 1} of ${this.rabbitMQConfig.maxRetryAttempt}`,
+              `Queue message processing failed, sending to retry queue. Attempt ${retryCount + 1} of ${this.rabbitMQConfig.maxRetryAttempt}`,
               RabbitMQService.name,
             );
           } else {
             this.channel.ack(msg);
             this.logger.error(
-              `Max retries reached for email, sending to dead letter queue: ${error.message}`,
+              `Max retries reached for queue message, sending to dead letter queue: ${error.message}`,
               RabbitMQService.name,
             );
 
@@ -217,6 +220,6 @@ export class RabbitMQService implements OnModuleInit {
       { noAck: false },
     );
 
-    this.logger.log('Email consumer started', RabbitMQService.name);
+    this.logger.log('Queue consumer started', RabbitMQService.name);
   }
 }
