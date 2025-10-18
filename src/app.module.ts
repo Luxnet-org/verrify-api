@@ -120,6 +120,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
               user: emailConfig.username,
               pass: emailConfig.password,
             },
+            requireTLS: true,
             logger: appConfig?.env === 'dev',
             debug: appConfig?.env === 'dev',
             tls: {
