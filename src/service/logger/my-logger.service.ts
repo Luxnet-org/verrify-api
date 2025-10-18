@@ -61,7 +61,7 @@ export class MyLoggerService extends ConsoleLogger {
     const logMessage =
       typeof message === 'object' ? JSON.stringify(message) : message;
     const entry: string = `${stackOrContext}\t${logMessage}`;
-    this.logToFile(entry, 'ERROR');
+    // this.logToFile(entry, 'ERROR');
     super.error(message, stackOrContext);
   }
 }
