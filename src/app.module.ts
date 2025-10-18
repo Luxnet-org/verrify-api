@@ -124,7 +124,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
             logger: appConfig?.env === 'dev',
             debug: appConfig?.env === 'dev',
             tls: {
-              rejectUnauthorized: false,
+              // rejectUnauthorized: false,
             },
           },
           defaults: {
