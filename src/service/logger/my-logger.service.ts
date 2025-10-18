@@ -53,7 +53,7 @@ export class MyLoggerService extends ConsoleLogger {
       ? JSON.stringify(message)
       : message;
     const entry: string = `${context}\t${logMessage}`;
-    this.logToFile(entry, 'SUCCESS');
+    // this.logToFile(entry, 'SUCCESS');
     super.log(message, context);
   }
 
