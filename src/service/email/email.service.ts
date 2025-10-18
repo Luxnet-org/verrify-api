@@ -76,7 +76,7 @@ export class EmailService {
   async sendContactMeReply(emailRequest: EmailRequest): Promise<void> {
     await this.sendMail(
       emailRequest.to,
-      'Thank you for Contacting Us',
+      'Thank you for Reaching Out',
       'contact-respond-email-template',
       emailRequest.context,
     );
