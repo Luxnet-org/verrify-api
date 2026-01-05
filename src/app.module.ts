@@ -126,6 +126,11 @@ import { ThrottlerModule } from '@nestjs/throttler';
             tls: {
               // rejectUnauthorized: false,
             },
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100,
+            connectionTimeout: 15000,
+            socketTimeout: 20000,
           },
           defaults: {
             from: emailConfig.sender,
