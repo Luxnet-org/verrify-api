@@ -5,6 +5,7 @@ export const corsOptions = {
     'https://lux-net-product-zflr.vercel.app',
     'https://lux-net-product.vercel.app',
     'https://verrifyproduct.vercel.app',
+    'https://verrifyproduct-kpvx.vercel.app'
   ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
