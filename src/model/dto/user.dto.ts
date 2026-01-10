@@ -30,6 +30,8 @@ export class UserDto extends DateDto {
 
   isVerified: boolean;
 
+  hasCompanyProfile: boolean;
+
   isGoogleLogin: boolean;
 
   isEnabled: boolean;

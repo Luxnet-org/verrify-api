@@ -38,7 +38,7 @@ export class UserService {
       userQuery,
       {},
       {},
-      ['address'],
+      ['address', 'company'],
     );
     const [users, count] = await this.userRepository.findAndCount(findOptions);
 
@@ -51,7 +51,11 @@ export class UserService {
   }
 
   async findSingleUser(userId: string): Promise<UserDto> {
-    const user: User = await this.findById(userId, ['address', 'profileImage']);
+    const user: User = await this.findById(userId, [
+      'address',
+      'profileImage',
+      'company',
+    ]);
 
     this.logger.log(`Retrieved user with id: ${user.id}`, UserService.name);
     return this.convertToDto(user);
@@ -74,7 +78,11 @@ export class UserService {
       dob,
     }: UpdateUserRequestDto = updateRequest;
 
-    let user: User = await this.findById(userId, ['address', 'profileImage']);
+    let user: User = await this.findById(userId, [
+      'address',
+      'profileImage',
+      'company',
+    ]);
 
     if (firstName) {
       user.firstName = firstName;
@@ -208,6 +216,7 @@ export class UserService {
       isVerified: user.isVerified,
       isGoogleLogin: user.isGoogleLogin,
       isEnabled: user.isEnabled,
+      hasCompanyProfile: !!user.company,
     };
   }
 }

@@ -160,7 +160,7 @@ export class AuthService {
       where: {
         email,
       },
-      relations: ['address'],
+      relations: ['address', 'company'],
     });
 
     if (!user) {
@@ -226,7 +226,7 @@ export class AuthService {
       where: {
         id: userId,
       },
-      relations: ['address'],
+      relations: ['address', 'company'],
     });
 
     if (!user) {
