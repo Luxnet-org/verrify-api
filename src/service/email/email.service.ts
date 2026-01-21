@@ -14,7 +14,7 @@ export class EmailService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly configService: ConfigService<ConfigInterface>,
-  ) {}
+  ) { }
 
   private async sendMail(
     to: string | string[],
@@ -87,6 +87,42 @@ export class EmailService {
       emailRequest.to,
       'Contact Me Message',
       'contact-admin-email-template',
+      emailRequest.context,
+    );
+  }
+
+  async sendCompanyVerifiedMail(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      '🎉 Company Profile Verified!',
+      'company-verified-email-template',
+      emailRequest.context,
+    );
+  }
+
+  async sendCompanyRejectedMail(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      '⚠️ Company Profile Verification Update',
+      'company-rejected-email-template',
+      emailRequest.context,
+    );
+  }
+
+  async sendPropertyVerifiedMail(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      '🏠 Property Verification Approved!',
+      'property-verified-email-template',
+      emailRequest.context,
+    );
+  }
+
+  async sendPropertyRejectedMail(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      '⚠️ Property Verification Update',
+      'property-rejected-email-template',
       emailRequest.context,
     );
   }

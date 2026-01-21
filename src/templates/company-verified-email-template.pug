@@ -1,0 +1,53 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Company Profile Verified
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 20px;
+        border: 1px solid #dddddd;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .details {
+        background-color: #f0f9f0;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      .details p {
+        margin: 5px 0;
+      }
+  body
+    .container
+      .header
+        h1 🎉 Company Profile Verified!
+      p Hello #{userName},
+      p Great news! Your company profile has been successfully verified and approved.
+      .details
+        p
+          strong Company Name:
+          |  #{companyName}
+        if companyDescription
+          p
+            strong Description:
+            |  #{companyDescription}
+      p Your company is now fully verified on our platform. You can now list properties and access all features available to verified companies.
+      p
+        strong Next Steps:
+        |  Log in to your account and start adding your properties to reach potential clients.
+      p If you have any questions, feel free to reach out to our support team.
+      p Thank you for choosing Verrify!

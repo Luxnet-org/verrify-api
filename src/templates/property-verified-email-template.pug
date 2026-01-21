@@ -1,0 +1,56 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Property Verified
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 20px;
+        border: 1px solid #dddddd;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .details {
+        background-color: #f0f9f0;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      .details p {
+        margin: 5px 0;
+      }
+  body
+    .container
+      .header
+        h1 🏠 Property Verification Approved!
+      p Hello #{userName},
+      p Great news! Your property has been successfully verified and is now approved.
+      .details
+        p
+          strong Property Name:
+          |  #{propertyName}
+        p
+          strong Property Type:
+          |  #{propertyType}
+        if propertyDescription
+          p
+            strong Description:
+            |  #{propertyDescription}
+      p Your property is now publicly listed on our platform and can be discovered by potential clients.
+      p
+        strong Next Steps:
+        |  Log in to your account to view your property listing and manage inquiries.
+      p If you have any questions, feel free to reach out to our support team.
+      p Thank you for choosing Verrify!

@@ -12,7 +12,7 @@ export class EmailEvent implements OnModuleInit {
   constructor(
     private readonly emailService: EmailService,
     private readonly rabbitService: RabbitMQService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.setupQueue();
@@ -37,6 +37,14 @@ export class EmailEvent implements OnModuleInit {
           await this.emailService.sendContactMeReply(emailRequest);
         } else if (emailRequest.type === EmailType.ADMINCONTACTMEREPLY) {
           await this.emailService.sendContactMeAdminRequest(emailRequest);
+        } else if (emailRequest.type === EmailType.COMPANY_VERIFIED) {
+          await this.emailService.sendCompanyVerifiedMail(emailRequest);
+        } else if (emailRequest.type === EmailType.COMPANY_REJECTED) {
+          await this.emailService.sendCompanyRejectedMail(emailRequest);
+        } else if (emailRequest.type === EmailType.PROPERTY_VERIFIED) {
+          await this.emailService.sendPropertyVerifiedMail(emailRequest);
+        } else if (emailRequest.type === EmailType.PROPERTY_REJECTED) {
+          await this.emailService.sendPropertyRejectedMail(emailRequest);
         }
       },
     });

@@ -25,6 +25,9 @@ import {
 import { CompanyLookupResponse } from '../../model/response/company-lookup-response.dto';
 import { CompanySearchQueryDto } from '../../model/request/company-search-query.dto';
 import { UpdateVerificationStatusDto } from '../../model/request/update-verification-status.dto';
+import { EmailEvent } from '../email/email-event.service';
+import { EmailRequest } from '../../model/request/email-request.dto';
+import { EmailType } from '../../model/enum/email-type.enum';
 
 @Injectable()
 export class CompanyService {
@@ -39,7 +42,8 @@ export class CompanyService {
     private readonly fileService: FileService,
     @InjectRepository(LocationEntity)
     private readonly locationRepository: Repository<LocationEntity>,
-  ) {}
+    private readonly emailEvent: EmailEvent,
+  ) { }
 
   async findAll(
     searchDto: CompanySearchQueryDto,
@@ -278,7 +282,7 @@ export class CompanyService {
         (company.companyVerificationStatus ===
           CompanyVerificationStatus.PENDING ||
           company.companyVerificationStatus ===
-            CompanyVerificationStatus.VERIFIED)
+          CompanyVerificationStatus.VERIFIED)
       ) {
         throw new BadRequestException(
           'Cannot modify company profile during review',
@@ -365,6 +369,27 @@ export class CompanyService {
     company.companyVerificationStatus = verificationStatus;
     company.verificationMessage = verificationMessage;
     await this.companyRepository.save(company);
+
+    // Send email notification based on verification status
+    if (
+      verificationStatus === CompanyVerificationStatus.VERIFIED ||
+      verificationStatus === CompanyVerificationStatus.REJECTED
+    ) {
+      const emailRequest: EmailRequest = {
+        type:
+          verificationStatus === CompanyVerificationStatus.VERIFIED
+            ? EmailType.COMPANY_VERIFIED
+            : EmailType.COMPANY_REJECTED,
+        to: company.user.email,
+        context: {
+          userName: company.user.firstName,
+          companyName: company.name,
+          companyDescription: company.description || '',
+          rejectionMessage: verificationMessage,
+        },
+      };
+      await this.emailEvent.sendEmailRequest(emailRequest);
+    }
 
     this.logger.log(
       `Updated company verification status for comapany profile: ${company.id}`,

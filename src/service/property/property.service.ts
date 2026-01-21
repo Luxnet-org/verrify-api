@@ -37,6 +37,9 @@ import {
 import { PropertyLookupResponseDto } from '../../model/response/property-lookup-response.dto';
 import { CompanyVerificationStatus } from '../../model/enum/company-verification-status.enum';
 import { PropertySearchQueryDto } from '../../model/request/property-search.dto';
+import { EmailEvent } from '../email/email-event.service';
+import { EmailRequest } from '../../model/request/email-request.dto';
+import { EmailType } from '../../model/enum/email-type.enum';
 
 @Injectable()
 export class PropertyService {
@@ -52,7 +55,8 @@ export class PropertyService {
     private readonly locationRepository: Repository<LocationEntity>,
     private readonly fileService: FileService,
     private readonly userService: UserService,
-  ) {}
+    private readonly emailEvent: EmailEvent,
+  ) { }
 
   async create(
     userId: string,
@@ -305,9 +309,9 @@ export class PropertyService {
 
     if (
       property.propertyVerificationStatus !==
-        PropertyVerificationStatus.NOT_VERIFIED &&
+      PropertyVerificationStatus.NOT_VERIFIED &&
       property.propertyVerificationStatus !==
-        PropertyVerificationStatus.REJECTED
+      PropertyVerificationStatus.REJECTED
     ) {
       throw new BadRequestException('Property cannot be modified');
     }
@@ -474,7 +478,10 @@ export class PropertyService {
     userId: string,
     propertyRequest: UpdatePropertyStatusDto,
   ): Promise<string> {
-    const property: Property = await this.findById(propertyId);
+    const property: Property = await this.findById(propertyId, [
+      'company',
+      'company.user',
+    ]);
 
     if (
       property.propertyVerificationStatus !==
@@ -491,6 +498,31 @@ export class PropertyService {
     property.verificationMessage = propertyRequest.verificationMessage;
 
     const updatedProperty = await this.propertyRepository.save(property);
+
+    // Send email notification based on verification status
+    if (
+      propertyRequest.propertyVerificationStatus ===
+      PropertyVerificationStatus.VERIFIED ||
+      propertyRequest.propertyVerificationStatus ===
+      PropertyVerificationStatus.REJECTED
+    ) {
+      const emailRequest: EmailRequest = {
+        type:
+          propertyRequest.propertyVerificationStatus ===
+            PropertyVerificationStatus.VERIFIED
+            ? EmailType.PROPERTY_VERIFIED
+            : EmailType.PROPERTY_REJECTED,
+        to: property.company.user.email,
+        context: {
+          userName: property.company.user.firstName,
+          propertyName: property.name,
+          propertyType: property.propertyType,
+          propertyDescription: property.description || '',
+          rejectionMessage: propertyRequest.verificationMessage,
+        },
+      };
+      await this.emailEvent.sendEmailRequest(emailRequest);
+    }
 
     this.logger.log(`Updated property status for property: ${propertyId}`);
     return `Property ${updatedProperty.id} updated with status ${updatedProperty.propertyVerificationStatus}`;
@@ -1002,26 +1034,26 @@ export class PropertyService {
       isSubProperty: property.isSubProperty,
       users: property.isSubProperty
         ? property.users.map((user) => {
-            return {
-              userId: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: user.email,
-              profileImageUrl: user.profileImage ? user.profileImage.url : null,
-            };
-          })
+          return {
+            userId: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            profileImageUrl: user.profileImage ? user.profileImage.url : null,
+          };
+        })
         : null,
       company: !property.isSubProperty
         ? {
-            companyId: property.company.id,
-            companyVerificationStatus:
-              property.company.companyVerificationStatus,
-            proofOfAddressType: property.company.proofOfAddressType,
-            profileImage: property.company.profileImage
-              ? property.company.profileImage.url
-              : null,
-            name: property.company.name,
-          }
+          companyId: property.company.id,
+          companyVerificationStatus:
+            property.company.companyVerificationStatus,
+          proofOfAddressType: property.company.proofOfAddressType,
+          profileImage: property.company.profileImage
+            ? property.company.profileImage.url
+            : null,
+          name: property.company.name,
+        }
         : null,
     };
   }
@@ -1051,14 +1083,14 @@ export class PropertyService {
         : null,
       users: property.isSubProperty
         ? property.users.map((user) => {
-            return {
-              userId: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: user.email,
-              profileImageUrl: user.profileImage ? user.profileImage.url : null,
-            };
-          })
+          return {
+            userId: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            profileImageUrl: user.profileImage ? user.profileImage.url : null,
+          };
+        })
         : null,
     };
   }

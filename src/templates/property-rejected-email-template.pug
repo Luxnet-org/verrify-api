@@ -1,0 +1,50 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Property Verification Update
+    style.
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 20px;
+        border: 1px solid #dddddd;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .reason {
+        background-color: #fff5f5;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #e53e3e;
+        margin: 15px 0;
+      }
+  body
+    .container
+      .header
+        h1 ⚠️ Property Verification Update
+      p Hello #{userName},
+      p We have reviewed your property "#{propertyName}" and unfortunately, we were unable to verify it at this time.
+      .reason
+        p
+          strong Reason:
+        p #{rejectionMessage}
+      p
+        strong What you can do:
+      ul
+        li Review the feedback provided above
+        li Update your property listing with the necessary corrections
+        li Resubmit your property for verification
+      p Once you've made the required changes, please log in to your account and update your property details. Our team will review it again promptly.
+      p If you have any questions or need assistance, please don't hesitate to contact our support team.
+      p Thank you for your understanding.
