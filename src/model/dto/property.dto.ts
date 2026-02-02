@@ -47,6 +47,9 @@ export class PropertyDto extends DateDto {
   letterOfIntent: string | null;
 
   @ApiProperty()
+  deedOfConveyance: string | null;
+
+  @ApiProperty()
   isSubProperty: boolean;
 
   @ApiProperty()

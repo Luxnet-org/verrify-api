@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with PostGIS extension for geospatial queries
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: verrify-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nest
+      POSTGRES_PASSWORD: nest1234
+      POSTGRES_DB: verrify
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - verrify-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nest -d verrify']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ message broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: verrify-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: nest
+      RABBITMQ_DEFAULT_PASS: nest1234
+    ports:
+      - '5672:5672'   # AMQP protocol
+      - '15672:15672' # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - verrify-network
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MailHog - Local development mail server with web UI
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: verrify-mailhog
+    restart: unless-stopped
+    ports:
+      - '1025:1025'  # SMTP server
+      - '8025:8025'  # Web UI
+    networks:
+      - verrify-network
+    logging:
+      driver: 'none' # Disable logging to reduce noise
+
+  # Redis - Optional, for caching (uncomment if needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: verrify-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - '6379:6379'
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - verrify-network
+  #   healthcheck:
+  #     test: ['CMD', 'redis-cli', 'ping']
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  # redis_data:
+  #   driver: local
+
+networks:
+  verrify-network:
+    driver: bridge

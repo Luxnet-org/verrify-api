@@ -569,20 +569,18 @@ export class PropertyService {
       'company.user',
     ]);
 
-    if (
-      property.company.user.id !== userId ||
-      (property.company.user.id !== userId && user.role === UserRole.USER)
-    ) {
-      throw new UnauthorizedException(
-        'Not authorized to view property request',
-      );
-    }
+    // Determine if user can view documents:
+    // - Property owner can always see documents
+    // - Non-USER roles (admin, etc.) can see documents
+    const isOwner = property.company.user.id === userId;
+    const isNonUserRole = user.role !== UserRole.USER;
+    const includeDocuments = isOwner || isNonUserRole;
 
     this.logger.log(
       `Retrieved property ${property.id} for user ${userId}`,
       PropertyService.name,
     );
-    return this.convertToDto(property);
+    return this.convertToDto(property, includeDocuments);
   }
 
   async getAllCompanyProperties(
@@ -603,6 +601,13 @@ export class PropertyService {
         'Not authorized to view company properties',
       );
     }
+
+    // Determine if user can view documents:
+    // - Company owner can always see documents
+    // - Non-USER roles (admin, etc.) can see documents
+    const isOwner = company.user.id === userId;
+    const isNonUserRole = user.role !== UserRole.USER;
+    const includeDocuments = isOwner || isNonUserRole;
 
     const findOptions = PaginationAndSorting.createFindOptions<Property>(
       null,
@@ -631,7 +636,7 @@ export class PropertyService {
       properties,
       count,
       propertyQuery,
-      (property) => this.convertToDto(property),
+      (property) => this.convertToDto(property, includeDocuments),
     );
   }
 
@@ -646,14 +651,12 @@ export class PropertyService {
       'company.user',
     ]);
 
-    if (
-      property.company.user.id !== userId ||
-      (property.company.user.id !== userId && user.role === UserRole.USER)
-    ) {
-      throw new UnauthorizedException(
-        "Not authorized to view property's sub-properties",
-      );
-    }
+    // Determine if user can view documents:
+    // - Property owner can always see documents
+    // - Non-USER roles (admin, etc.) can see documents
+    const isOwner = property.company.user.id === userId;
+    const isNonUserRole = user.role !== UserRole.USER;
+    const includeDocuments = isOwner || isNonUserRole;
 
     const findOptions = PaginationAndSorting.createFindOptions<Property>(
       null,
@@ -684,7 +687,7 @@ export class PropertyService {
       properties,
       count,
       propertyQuery,
-      (subProperty) => this.convertToDto(subProperty),
+      (subProperty) => this.convertToDto(subProperty, includeDocuments),
     );
   }
 
@@ -1058,7 +1061,10 @@ export class PropertyService {
     };
   }
 
-  private convertToDto(property: Property): PropertyDto {
+  private convertToDto(
+    property: Property,
+    includeDocuments: boolean = true,
+  ): PropertyDto {
     return {
       id: property.id,
       name: property.name,
@@ -1071,16 +1077,27 @@ export class PropertyService {
       city: property.location.city,
       state: property.location.state,
       propertyType: property.propertyType,
-      certificationOfOccupancy: property.certificationOfOccupancy
-        ? property.certificationOfOccupancy.url
-        : null,
-      contractOfSale: property.contractOfSale
-        ? property.contractOfSale.url
-        : null,
-      surveyPlan: property.surveyPlan ? property.surveyPlan.url : null,
-      letterOfIntent: property.letterOfIntent
-        ? property.letterOfIntent.url
-        : null,
+      // Only include documents if user is owner or has non-USER role
+      certificationOfOccupancy:
+        includeDocuments && property.certificationOfOccupancy
+          ? property.certificationOfOccupancy.url
+          : null,
+      contractOfSale:
+        includeDocuments && property.contractOfSale
+          ? property.contractOfSale.url
+          : null,
+      surveyPlan:
+        includeDocuments && property.surveyPlan
+          ? property.surveyPlan.url
+          : null,
+      letterOfIntent:
+        includeDocuments && property.letterOfIntent
+          ? property.letterOfIntent.url
+          : null,
+      deedOfConveyance:
+        includeDocuments && property.deedOfConveyance
+          ? property.deedOfConveyance.url
+          : null,
       users: property.isSubProperty
         ? property.users.map((user) => {
           return {
