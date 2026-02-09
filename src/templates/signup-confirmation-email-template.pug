@@ -1,33 +1,27 @@
-doctype html
-html(lang="en")
-  head
-    meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title Account Verified - Welcome!
-    style.
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f9f9f9;
-        margin: 0;
-        padding: 20px;
-      }
-      .container {
-        max-width: 600px;
-        margin: auto;
-        background-color: #ffffff;
-        padding: 20px;
-        border: 1px solid #dddddd;
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-  body
-    .container
-      .header
-        h1 Account Verified!
-      p Hello #{name},
-      p We're excited to let you know that your email has been successfully verified and your account is now active.
-      p Welcome to your new account! We're thrilled to have you on board and can't wait for you to explore all that we have to offer.
-      p If you have any questions or need assistance, feel free to reach out.
-      p Thank you for joining us!
+extends layout.pug
+
+block content
+  h1 Welcome! Your account is ready
+  
+  .hero-illustration(style="text-align: center;")
+    // Using a placeholder for "Welcome Illustration"
+    img(src="https://res.cloudinary.com/dj7reukeb/image/upload/v1770549817/Frame_2147228600_dcdoe7.png", alt="Welcome Illustration" style="display:inline-block; max-width: 100%; height: auto;")
+  
+  p(style="text-align: center; color: #6B7280; font-size: 18px; margin-bottom: 24px;") Dear #{name || 'Valued User'},
+  
+  p(style="text-align: center; margin-bottom: 30px;")
+    | We're excited to have you on board! Your account has been successfully created and you're all set to get started. 
+    | Expect premium features, secure transactions, and a community of trusted professionals.
+  
+  div(style="text-align: center;")
+    a.btn(href=actionUrl || "#") Go to My Dashboard
+  
+  p(style="text-align: center; margin-top: 30px; font-size: 14px; color: #9CA3AF;")
+    | If the button above doesn't work, copy and paste this link into your browser:
+    br
+    a(href=actionUrl || "#", style="color: #4F46E5;") #{actionUrl || 'https://verrify.com/dashboard'}
+  
+  p(style="text-align: center; margin-top: 40px;")
+    | Best regards,
+    br
+    strong The Verrify Team

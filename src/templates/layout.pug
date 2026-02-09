@@ -1,0 +1,230 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Verrify Notification
+    style.
+      /* Font Import */
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+      /* Base Style Reset */
+      body, p, h1, h2, h3, h4, h5, h6, ul, ol, li, a {
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', Arial, sans-serif;
+        color: #333333;
+      }
+
+      body {
+        background-color: #F3F4F6; /* Light Grey background matching screenshot */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      table {
+        border-spacing: 0;
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      /* Container */
+      .email-wrapper {
+        width: 100%;
+        background-color: #F3F4F6;
+        padding: 40px 0;
+      }
+
+      .email-container {
+        max-width: 600px; /* Standard email width */
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      /* Header (Logo) */
+      .header {
+        text-align: center;
+        padding: 40px 20px;
+        background-color: #111827;
+      }
+
+      .logo {
+        max-width: 150px;
+        height: auto;
+      }
+      
+      .logo-text {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111827; /* Dark text */
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+      }
+
+      /* Main Content Area */
+      .content {
+        padding: 40px 40px 40px 40px;
+        text-align: left;
+      }
+      
+      /* Hero Illustration Wrapper */
+      .hero-illustration {
+        background-color: #111827; /* Dark background matching screenshot hero block */
+        border-radius: 12px;
+        padding: 40px 20px;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .hero-image {
+        max-width: 180px;
+        height: auto;
+      }
+
+      /* Typography */
+      h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: #111827;
+        text-align: center; /* Center main title like 'Welcome!' */
+      }
+      
+      p {
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        color: #4B5563;
+      }
+
+      /* Buttons & CTAs */
+      .btn {
+        display: inline-block;
+        padding: 14px 32px;
+        background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 100%); /* Blurple Gradient */
+        color: #ffffff !important;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        margin: 20px 0;
+        box-shadow: 0 4px 14px 0 rgba(124, 58, 237, 0.4);
+      }
+      
+      .otp-code {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 4px;
+        color: #111827;
+        background-color: #F9FAFB;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 20px 0;
+        border: 1px dashed #D1D5DB;
+      }
+
+      /* Footer */
+      .footer {
+        background-color: #ffffff;
+        padding: 30px 40px;
+        text-align: center;
+        border-top: 1px solid #E5E7EB;
+      }
+
+      .social-links {
+        margin-bottom: 20px;
+      }
+      
+      .social-icon {
+        display: inline-block;
+        margin: 0 10px;
+        text-decoration: none;
+      }
+      
+      .footer-links {
+        font-size: 12px;
+        color: #9CA3AF;
+        margin-bottom: 15px;
+      }
+      
+      .footer-links a {
+        color: #6B7280;
+        text-decoration: none;
+        margin: 0 8px;
+      }
+      
+      .copyright {
+        font-size: 12px;
+        color: #9CA3AF;
+      }
+
+      /* Responsiveness */
+      @media screen and (max-width: 600px) {
+        .content {
+          padding: 20px;
+        }
+        .header {
+          padding: 20px;
+        }
+        h1 {
+            font-size: 20px;
+        }
+        .btn {
+            width: 100%;
+            box-sizing: border-box;
+        }
+      }
+
+  body
+    table.email-wrapper
+      tr
+        td(align="center")
+          table.email-container
+            // HEADER
+            tr
+              td.header
+                // Replace with actual logo URL if provided
+                a.logo-text(href="#")
+                  // Simple checkmark svg
+                  img(src="https://res.cloudinary.com/dj7reukeb/image/upload/v1770549817/Veriffy_qggazo.png", alt="Logo Icon", style="vertical-align: middle; margin-right: 8px; border-radius: 4px; max-width: 154px; height: auto;")
+
+
+            // CONTENT
+            tr
+              td.content
+                block content
+
+            // FOOTER
+            tr
+              td.footer
+                .social-links
+                  a.social-icon(href="#")
+                    img(src="https://img.icons8.com/ios-filled/50/000000/facebook-new.png", alt="Facebook", width="24")
+                  a.social-icon(href="https://x.com/Verrify_")
+                    img(src="https://img.icons8.com/ios-filled/50/000000/twitterx--v1.png", alt="Twitter", width="24")
+                  a.social-icon(href="https://www.instagram.com/ver.rify")
+                    img(src="https://img.icons8.com/ios-filled/50/000000/instagram-new.png", alt="Instagram", width="24")
+                  a.social-icon(href="https://www.linkedin.com/company/verrify  ")
+                    img(src="https://img.icons8.com/ios-filled/50/000000/linkedin.png", alt="LinkedIn", width="24")
+                
+                .footer-links
+                  a(href="#") Help
+                  | |
+                  a(href="#") Contact Us
+                  | |
+                  a(href="#") Terms
+                  | |
+                  a(href="#") Privacy
+                  | |
+                  a(href="#") Unsubscribe
+                
+                p.copyright
+                  | © #{new Date().getFullYear()} Verrify Inc. All rights reserved.
+                  br
+                  | 123 Innovation Drive, Tech City, TC 90210

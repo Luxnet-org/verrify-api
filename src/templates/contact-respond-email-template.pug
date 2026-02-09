@@ -1,58 +1,25 @@
-doctype html
-html
-    head
-        meta(charset="utf-8")
-        title Contact Us - Message Received
-        style.
-            body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                background: #f4f4f4;
-            }
-            .header {
-                background-color: #00008B; /* dark blue */
-                color: #ffffff;
-                padding: 20px;
-                text-align: center;
-            }
-            .content {
-                padding: 30px;
-                background: #ffffff;
-                margin: 20px auto;
-                max-width: 600px;
-                border-radius: 5px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            }
-            .message {
-                font-size: 1.2em;
-                color: #333333;
-                text-align: left;
-                margin: 20px 0;
-            }
-            p {
-                line-height: 1.6;
-            }
-            .email {
-                color: blue;
-            }
+extends layout.pug
 
-    body
-        .header
-            h1 Thank You for Reaching Out
-        .content
-            p Hey there 👋
-            p I’m Eromosele Akhigbe, Co-founder and COO of LuxNet. I’m really excited to welcome you to the waitlist for our first product, Verrify.
-            p Why Verrify?
-            p If you’ve ever tried to verify land ownership in Nigeria, you already know the headache. Confusing records, missing data, slow processes. It’s a problem that has stuck around for far too long.
-            p We’re here to fix that.
-            p Verrify is built to make land ownership verification as easy as searching for a location on Google Maps.
-            p With just a few clicks, you’ll be able to find out exactly who owns what and where.
-            p We’re working hard behind the scenes and can’t wait to show you what we’ve been building. You’ll be one of the first to know when we go live, and we think you’ll love what’s coming.
-            p In the meantime, feel free to reply if you have questions or just want to say hi.
-            p Thanks again for signing up.
-            p Let’s make land verification simpler, together.
-            p —
-            p Eromosele Akhigbe
-            p COO and Co-founder,
-            p LuxNet
+block content
+  h1 Response to your inquiry
+  
+  .hero-illustration
+    // Placeholder for "Support/Response" icon
+    img(src="https://placehold.co/120x120/111827/FFFFFF/png?text=Reply&font=roboto", alt="Support Response", style="display:inline-block;")
+  
+  p(style="text-align: center; font-size: 16px; margin-bottom: 24px;") Hello #{name || 'User'},
+  
+  p(style="text-align: center; margin-bottom: 30px;")
+    | Thank you for contacting Verrify Support. Regarding your inquiry about "<strong>#{subject}</strong>", here is our response:
+  
+  div(style="background-color: #F9FAFB; padding: 24px; border-radius: 8px; border-left: 4px solid #4F46E5; margin-bottom: 30px; text-align: left; font-style: italic;")
+    | "#{responseMessage}"
+  
+  p(style="text-align: center;")
+    | If you have further questions, please reply directly to this email or visit our Help Center.
+  
+  div(style="text-align: center;")
+    a.btn(href=helpCenterLink || "#") Visit Help Center
+  
+  p(style="text-align: center;")
+    strong The Verrify Support Team

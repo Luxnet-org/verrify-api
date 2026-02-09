@@ -1,56 +1,23 @@
-doctype html
-html(lang="en")
-  head
-    meta(charset="UTF-8")
-    meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title Property Verified
-    style.
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f9f9f9;
-        margin: 0;
-        padding: 20px;
-      }
-      .container {
-        max-width: 600px;
-        margin: auto;
-        background-color: #ffffff;
-        padding: 20px;
-        border: 1px solid #dddddd;
-      }
-      .header {
-        text-align: center;
-        margin-bottom: 20px;
-      }
-      .details {
-        background-color: #f0f9f0;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 15px 0;
-      }
-      .details p {
-        margin: 5px 0;
-      }
-  body
-    .container
-      .header
-        h1 🏠 Property Verification Approved!
-      p Hello #{userName},
-      p Great news! Your property has been successfully verified and is now approved.
-      .details
-        p
-          strong Property Name:
-          |  #{propertyName}
-        p
-          strong Property Type:
-          |  #{propertyType}
-        if propertyDescription
-          p
-            strong Description:
-            |  #{propertyDescription}
-      p Your property is now publicly listed on our platform and can be discovered by potential clients.
-      p
-        strong Next Steps:
-        |  Log in to your account to view your property listing and manage inquiries.
-      p If you have any questions, feel free to reach out to our support team.
-      p Thank you for choosing Verrify!
+extends layout.pug
+
+block content
+  h1 Property Verification Successful!
+  
+  .hero-illustration(style="text-align: center;")
+    // Placeholder for "House Check" icon (Green?)
+    img(src="https://res.cloudinary.com/dj7reukeb/image/upload/v1770549816/Frame_2147228598_1_hrlb5r.png", alt="Property Checkmark", style="display:inline-block; max-width: 100%; height: auto;")
+  
+  p(style="text-align: center; font-size: 18px; color: #10B981;") Congratulations, #{name || 'User'}!
+  
+  p(style="text-align: center; margin-bottom: 24px;")
+    | Your property, <strong>#{propertyName}</strong>, located at <em>#{location}</em>, has been successfully verified.
+    | It is now listed and available for guests to book with full trust.
+  
+  div(style="text-align: center;")
+    a.btn(href=listingLink || "#") View My Listing
+  
+  p(style="text-align: center; margin-top: 30px;")
+    | This verification adds a 'Verified' badge to your property, increasing visibility and trust.
+  
+  p(style="text-align: center;")
+    strong The Verrify Team
