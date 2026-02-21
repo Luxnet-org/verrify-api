@@ -110,10 +110,10 @@ $ npm run typeorm:migration-revert
 Once the application is running, the Swagger Interactive API Documentation can be accessed at:
 
 ```
-http://localhost:<PORT>/api/docs
+http://localhost:<PORT>/docs
 ```
 
-*(Assuming the default internal configuration maps Swagger to `/api/docs`)*
+*(Assuming the default internal configuration maps Swagger to `/docs`)*
 
 ## Test
 

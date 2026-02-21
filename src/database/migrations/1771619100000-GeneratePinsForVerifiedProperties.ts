@@ -8,7 +8,7 @@ export class GeneratePinsForVerifiedProperties1771619100000 implements Migration
         const properties = await queryRunner.query(`
             SELECT p."id", l."state"
             FROM "property" p
-            LEFT JOIN "location_entity" l ON l."propertyId" = p."id"
+            LEFT JOIN "location" l ON l."propertyId" = p."id"
             WHERE p."propertyVerificationStatus" = 'VERIFIED'
               AND (p."pin" IS NULL OR p."pin" = '')
         `);
