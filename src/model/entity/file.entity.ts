@@ -1,10 +1,11 @@
 import { Auditable } from 'src/utility/autitable.entity';
-import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { FileType } from '../enum/file-type.enum';
 import { User } from './user.entity';
 import { Company } from './company.entity';
 import { Property } from './property.entity';
 import { Article } from './article.entity';
+import { PropertyVerification } from './property-verification.entity';
 
 @Entity('file')
 export class FileEntity extends Auditable {
@@ -52,4 +53,12 @@ export class FileEntity extends Auditable {
   @OneToOne(() => Article, (article) => article.titleImage)
   @JoinColumn()
   articleTitleImage: Article | null;
+
+  @ManyToOne(() => PropertyVerification, (verification) => verification.verificationFiles)
+  @JoinColumn()
+  propertyVerification: PropertyVerification | null;
+
+  @ManyToOne(() => PropertyVerification, (verification) => verification.adminStageFiles)
+  @JoinColumn()
+  adminPropertyVerification: PropertyVerification | null;
 }

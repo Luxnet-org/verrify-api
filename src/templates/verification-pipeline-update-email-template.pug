@@ -1,0 +1,32 @@
+extends layout.pug
+
+block content
+  h1 Property Verification Update
+  
+  .hero-illustration(style="text-align: center; margin-bottom: 20px;")
+    // Generic notification icon
+    img(src="https://res.cloudinary.com/dj7reukeb/image/upload/v1770549816/Frame_2147228598_1_hrlb5r.png", alt="Notification", style="display:inline-block; max-width: 100%; height: auto;")
+  
+  p(style="text-align: center; font-size: 18px;") Hello, #{firstName || 'User'}!
+  
+  p(style="text-align: center; margin-bottom: 24px;")
+    | #{message}
+  
+  if comments
+    div(style="background-color: #F3F4F6; padding: 15px; border-radius: 8px; margin: 20px auto; max-width: 500px;")
+      p(style="margin: 0; font-weight: bold; color: #374151; font-size: 14px;") Admin Comments:
+      p(style="margin: 5px 0 0 0; color: #4B5563; font-size: 14px;") #{comments}
+      
+  if attachments && attachments.length > 0
+    div(style="margin: 20px auto; max-width: 500px;")
+      p(style="font-weight: bold; color: #374151; font-size: 14px;") Attached Documents:
+      ul(style="padding-left: 20px; color: #4B5563; font-size: 14px;")
+        each file in attachments
+          li
+            a(href=file.path target="_blank" style="color: #2563EB; text-decoration: underline;")= file.filename || 'View Document'
+  
+  p(style="text-align: center; margin-top: 30px;")
+    | You can log in to your dashboard at any time to check the full details of your verification requests and manage your properties.
+  
+  p(style="text-align: center; margin-top: 30px;")
+    strong The Verrify Team

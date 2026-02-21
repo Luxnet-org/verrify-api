@@ -28,6 +28,7 @@ import { UpdateVerificationStatusDto } from '../../model/request/update-verifica
 import { EmailEvent } from '../email/email-event.service';
 import { EmailRequest } from '../../model/request/email-request.dto';
 import { EmailType } from '../../model/enum/email-type.enum';
+import { VerdictDto } from '../../model/request/verdict.dto';
 
 @Injectable()
 export class CompanyService {
@@ -177,9 +178,7 @@ export class CompanyService {
       name: companyDto.name,
       description: companyDto.description,
       phoneNumber: companyDto.phoneNumber,
-      companyVerificationStatus: companyDto.isSubmitted
-        ? CompanyVerificationStatus.PENDING
-        : CompanyVerificationStatus.NOT_VERIFIED,
+      companyVerificationStatus: CompanyVerificationStatus.NOT_VERIFIED,
       proofOfAddressType: companyDto.proofOfAddressType,
       user,
     });
@@ -234,7 +233,6 @@ export class CompanyService {
       state,
       name,
       description,
-      isSubmitted,
     }: UpdateCompanyProfileDto = companyDto;
 
     let company: Company = await this.findById(companyId, [
@@ -254,10 +252,6 @@ export class CompanyService {
 
     if (description) {
       company.description = description;
-    }
-
-    if (isSubmitted) {
-      company.companyVerificationStatus = CompanyVerificationStatus.PENDING;
     }
 
     if (profileImage) {
@@ -343,58 +337,140 @@ export class CompanyService {
     return this.convertToDto(company);
   }
 
-  async updateVerificationStatus(
+  async submitForVerification(
     companyId: string,
     userId: string,
-    verificationStatusDto: UpdateVerificationStatusDto,
   ): Promise<string> {
-    const {
-      verificationStatus,
-      verificationMessage,
-    }: UpdateVerificationStatusDto = verificationStatusDto;
+    const company = await this.findById(companyId, ['user']);
 
-    const company = await this.findById(companyId, [
-      'proofOfAddress',
-      'profileImage',
-      'address',
-      'user',
-    ]);
-
-    if (!verificationStatus || !verificationMessage) {
-      throw new BadRequestException(
-        'Provide verification status and verification message',
+    if (company.user.id !== userId) {
+      throw new UnauthorizedException(
+        'Only the company owner can submit for verification',
       );
     }
 
-    company.companyVerificationStatus = verificationStatus;
-    company.verificationMessage = verificationMessage;
-    await this.companyRepository.save(company);
-
-    // Send email notification based on verification status
     if (
-      verificationStatus === CompanyVerificationStatus.VERIFIED ||
-      verificationStatus === CompanyVerificationStatus.REJECTED
+      company.companyVerificationStatus !==
+      CompanyVerificationStatus.NOT_VERIFIED &&
+      company.companyVerificationStatus !==
+      CompanyVerificationStatus.REJECTED
     ) {
-      const emailRequest: EmailRequest = {
-        type:
-          verificationStatus === CompanyVerificationStatus.VERIFIED
-            ? EmailType.COMPANY_VERIFIED
-            : EmailType.COMPANY_REJECTED,
-        to: company.user.email,
-        context: {
-          userName: company.user.firstName,
-          companyName: company.name,
-          companyDescription: company.description || '',
-          rejectionMessage: verificationMessage,
-        },
-      };
-      await this.emailEvent.sendEmailRequest(emailRequest);
+      throw new BadRequestException(
+        `Cannot submit company with status ${company.companyVerificationStatus}. Only NOT_VERIFIED or REJECTED companies can be submitted.`,
+      );
     }
 
+    company.companyVerificationStatus = CompanyVerificationStatus.PENDING;
+    company.reviewUser = null as any;
+    company.reviewedAt = null as any;
+    company.verifiedAt = null as any;
+    company.verificationMessage = null as any;
+
+    await this.companyRepository.save(company);
+
+    // Send submission email
+    const emailRequest: EmailRequest = {
+      type: EmailType.COMPANY_SUBMITTED,
+      to: company.user.email,
+      context: {
+        userName: company.user.firstName,
+        companyName: company.name,
+      },
+    };
+    await this.emailEvent.sendEmailRequest(emailRequest);
+
     this.logger.log(
-      `Updated company verification status for comapany profile: ${company.id}`,
+      `Company ${company.id} submitted for verification by user ${userId}`,
     );
-    return `Verification status of company profile: ${company.id} has been updated to ${verificationStatus}`;
+    return `Company ${company.id} has been submitted for verification`;
+  }
+
+  async assignReview(
+    companyId: string,
+    adminUserId: string,
+  ): Promise<string> {
+    const admin: User = await this.userService.findById(adminUserId);
+
+    if (admin.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('Only admins can assign reviews');
+    }
+
+    const company = await this.findById(companyId, ['user']);
+
+    if (
+      company.companyVerificationStatus !==
+      CompanyVerificationStatus.PENDING
+    ) {
+      throw new BadRequestException(
+        `Cannot assign review for company with status ${company.companyVerificationStatus}. Only PENDING companies can be assigned for review.`,
+      );
+    }
+
+    company.companyVerificationStatus = CompanyVerificationStatus.IN_REVIEW;
+    company.reviewUser = admin;
+    company.reviewedAt = new Date();
+
+    await this.companyRepository.save(company);
+
+    this.logger.log(
+      `Company ${company.id} assigned for review to admin ${adminUserId}`,
+    );
+    return `Company ${company.id} is now in review by admin ${admin.firstName}`;
+  }
+
+  async giveVerdict(
+    companyId: string,
+    adminUserId: string,
+    verdictDto: VerdictDto,
+  ): Promise<string> {
+    const company = await this.findById(companyId, ['user', 'reviewUser']);
+
+    if (
+      company.companyVerificationStatus !==
+      CompanyVerificationStatus.IN_REVIEW
+    ) {
+      throw new BadRequestException(
+        `Cannot give verdict for company with status ${company.companyVerificationStatus}. Only IN_REVIEW companies can receive a verdict.`,
+      );
+    }
+
+    if (!company.reviewUser || company.reviewUser.id !== adminUserId) {
+      throw new UnauthorizedException(
+        'Only the assigned reviewer can give a verdict on this company',
+      );
+    }
+
+    const newStatus =
+      verdictDto.verdict === 'VERIFIED'
+        ? CompanyVerificationStatus.VERIFIED
+        : CompanyVerificationStatus.REJECTED;
+
+    company.companyVerificationStatus = newStatus;
+    company.verificationMessage = verdictDto.verificationMessage;
+    company.verifiedAt = new Date();
+
+    await this.companyRepository.save(company);
+
+    // Send verdict email
+    const emailRequest: EmailRequest = {
+      type:
+        newStatus === CompanyVerificationStatus.VERIFIED
+          ? EmailType.COMPANY_VERIFIED
+          : EmailType.COMPANY_REJECTED,
+      to: company.user.email,
+      context: {
+        userName: company.user.firstName,
+        companyName: company.name,
+        companyDescription: company.description || '',
+        rejectionMessage: verdictDto.verificationMessage,
+      },
+    };
+    await this.emailEvent.sendEmailRequest(emailRequest);
+
+    this.logger.log(
+      `Company ${company.id} verdict: ${newStatus} by admin ${adminUserId}`,
+    );
+    return `Company ${company.id} has been ${newStatus.toLowerCase()}`;
   }
 
   convertToDto(company: Company): CompanyDto {

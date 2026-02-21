@@ -22,7 +22,6 @@ import { Request } from 'express';
 import { UserInfo } from '../common/guards/auth.guard';
 import { CreatePropertyRequestDto } from '../model/request/create-property-request.dto';
 import { UpdatePropertyRequestDto } from '../model/request/update-property-request.dto';
-import { UpdatePropertyStatusDto } from '../model/request/update-property-status.dto';
 import { RequireRoles } from '../common/decorator/role.decorator';
 import { UserRole } from '../model/enum/role.enum';
 import {
@@ -37,11 +36,12 @@ import {
   ViewportQueryDto,
 } from '../model/request/property-view-query.dto';
 import { PropertySearchQueryDto } from '../model/request/property-search.dto';
+import { VerdictDto } from '../model/request/verdict.dto';
 
 @ApiTags('Property API')
 @Controller('property')
 export class PropertyController {
-  constructor(private readonly propertyService: PropertyService) {}
+  constructor(private readonly propertyService: PropertyService) { }
 
   @ApiOperation({ summary: 'Api endpoint to create property' })
   @SwaggerApiResponseData({
@@ -70,16 +70,16 @@ export class PropertyController {
     dataClass: PropertyDto,
     status: HttpStatus.CREATED,
   })
-  @Post('/:id/sub')
+  @Post('/:identifier/sub')
   @HttpCode(HttpStatus.CREATED)
   async createSubProperty(
-    @Param('id') propertyId: string,
+    @Param('identifier') identifier: string,
     @Body() propertyRequest: CreateSubPropertyRequestDto,
     @Req() request: Request,
   ): Promise<ApiResponse<PropertyDto>> {
     const userInfo: UserInfo = request.user!;
     const response: PropertyDto = await this.propertyService.createSubProperty(
-      propertyId,
+      identifier,
       userInfo.userId,
       propertyRequest,
     );
@@ -87,68 +87,46 @@ export class PropertyController {
     return ApiResponse.success(response, HttpStatus.CREATED);
   }
 
-  @RequireRoles(UserRole.ADMIN)
-  @ApiOperation({
-    summary: 'Api endpoint to update property verification status',
-  })
+  @ApiOperation({ summary: 'Submit property for verification' })
   @SwaggerApiResponseData({
     type: 'string',
     status: HttpStatus.OK,
   })
-  @Patch('/status/:id')
+  @Patch('/:identifier/submit')
   @HttpCode(HttpStatus.OK)
-  async updatePropertyStatus(
-    @Param('id') propertyId: string,
-    @Body() statusDto: UpdatePropertyStatusDto,
+  async submitForVerification(
+    @Param('identifier') identifier: string,
     @Req() request: Request,
   ): Promise<ApiResponse<string>> {
     const userInfo: UserInfo = request.user!;
-    const response: string = await this.propertyService.updatePropertyStatus(
-      propertyId,
+    const response: string = await this.propertyService.submitForVerification(
+      identifier,
       userInfo.userId,
-      statusDto,
     );
 
     return ApiResponse.success(response, HttpStatus.OK);
   }
+
+
 
   @ApiOperation({ summary: 'Api endpoint to update property' })
   @SwaggerApiResponseData({
     dataClass: PropertyDto,
     status: HttpStatus.OK,
   })
-  @Patch('/:id')
+  @Patch('/:identifier')
   @HttpCode(HttpStatus.OK)
   async update(
-    @Param('id') propertyId: string,
+    @Param('identifier') identifier: string,
     @Body() propertyRequest: UpdatePropertyRequestDto,
     @Req() request: Request,
   ): Promise<ApiResponse<PropertyDto>> {
     const userInfo: UserInfo = request.user!;
     const response: PropertyDto = await this.propertyService.update(
-      propertyId,
+      identifier,
       userInfo.userId,
       propertyRequest,
     );
-
-    return ApiResponse.success(response, HttpStatus.OK);
-  }
-
-  @ApiOperation({
-    summary: 'Api endpoint to get properties by admin',
-  })
-  @SwaggerApiPaginatedResponseData({
-    dataClass: PropertyLookupResponseDto,
-    status: HttpStatus.OK,
-  })
-  @Get('/get')
-  async getAll(
-    @Query() searchQuery: PropertySearchQueryDto,
-  ): Promise<
-    ApiResponse<PaginationAndSortingResult<PropertyLookupResponseDto>>
-  > {
-    const response: PaginationAndSortingResult<PropertyLookupResponseDto> =
-      await this.propertyService.getAllProperties(searchQuery);
 
     return ApiResponse.success(response, HttpStatus.OK);
   }
@@ -258,15 +236,15 @@ export class PropertyController {
     dataClass: PropertyDto,
     status: HttpStatus.OK,
   })
-  @Get('/:propertyId')
+  @Get('/:identifier')
   @HttpCode(HttpStatus.OK)
   async getOne(
-    @Param('propertyId') propertyId: string,
+    @Param('identifier') identifier: string,
     @Req() request: Request,
   ): Promise<ApiResponse<PropertyDto>> {
     const userInfo: UserInfo = request.user!;
     const response: PropertyDto = await this.propertyService.getOne(
-      propertyId,
+      identifier,
       userInfo.userId,
     );
 
@@ -280,17 +258,17 @@ export class PropertyController {
     dataClass: PropertyDto,
     status: HttpStatus.OK,
   })
-  @Get('/:propertyId/sub')
+  @Get('/:identifier/sub')
   @HttpCode(HttpStatus.OK)
   async getAllSubPropertiesForProperty(
-    @Param('propertyId') propertyId: string,
+    @Param('identifier') identifier: string,
     @Query() propertyQuery: PaginationQueryDto,
     @Req() request: Request,
   ): Promise<ApiResponse<PaginationAndSortingResult<PropertyDto>>> {
     const userInfo: UserInfo = request.user!;
     const response: PaginationAndSortingResult<PropertyDto> =
       await this.propertyService.getAllPropertySubProperty(
-        propertyId,
+        identifier,
         userInfo.userId,
         propertyQuery,
       );

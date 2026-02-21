@@ -19,11 +19,11 @@ import { User } from './model/entity/user.entity';
 import { LocationEntity } from './model/entity/location.entity';
 import { Token } from './model/entity/token.entity';
 import { FileEntity } from './model/entity/file.entity';
-import { Verification } from './model/entity/verification.entity';
+import { ActionVerification } from './model/entity/action-verification.entity';
 import { RbacService } from './service/rbac/rbac.service';
 import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { MailerModule, MailerOptions } from '@nestjs-modules/mailer';
-import { VerificationService } from './service/verification/verification.service';
+import { ActionVerificationService } from './service/action-verification/action-verification.service';
 import { EmailEvent } from './service/email/email-event.service';
 import { AuthController } from './controller/auth.controller';
 import { FileService } from './service/file/file.service';
@@ -46,6 +46,20 @@ import { ContactUsService } from './service/contact-us/contact-us.service';
 import { ContactUsController } from './controller/contact-us.controller';
 import { ContactEventService } from './service/contact-us/contact-event.service';
 import { NewsletterService } from './service/contact-us/newsletter.service';
+import { PortfolioService } from './service/portfolio/portfolio.service';
+import { PortfolioController } from './controller/portfolio.controller';
+import { PortfolioItem } from './model/entity/portfolio-item.entity';
+import { PropertyVerification } from './model/entity/property-verification.entity';
+import { PropertyVerificationController } from './controller/property-verification.controller';
+import { PropertyVerificationService } from './service/property-verification/property-verification.service';
+import { OrderService } from './service/payment/order.service';
+import { TransactionService } from './service/payment/transaction.service';
+import { PaymentController } from './controller/payment.controller';
+import { AdminVerificationController } from './controller/admin-verification.controller';
+import { AdminPaymentController } from './controller/admin-payment.controller';
+import { AdminPropertyController } from './controller/admin-property.controller';
+import { Order } from './model/entity/order.entity';
+import { Transaction } from './model/entity/transaction.entity';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -159,10 +173,14 @@ import { ThrottlerModule } from '@nestjs/throttler';
       LocationEntity,
       Token,
       FileEntity,
-      Verification,
+      ActionVerification,
       Company,
       Property,
       Article,
+      PortfolioItem,
+      PropertyVerification,
+      Order,
+      Transaction,
     ]),
     HttpModule,
     ScheduleModule.forRoot({}),
@@ -175,6 +193,12 @@ import { ThrottlerModule } from '@nestjs/throttler';
     PropertyController,
     ArticleController,
     ContactUsController,
+    PortfolioController,
+    PropertyVerificationController,
+    PaymentController,
+    AdminVerificationController,
+    AdminPaymentController,
+    AdminPropertyController,
   ],
   providers: [
     {
@@ -193,7 +217,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthService,
     UserService,
     RbacService,
-    VerificationService,
+    ActionVerificationService,
     EmailEvent,
     FileService,
     CloudinaryProvider,
@@ -205,7 +229,11 @@ import { ThrottlerModule } from '@nestjs/throttler';
     ContactUsService,
     ContactEventService,
     NewsletterService,
+    PortfolioService,
+    PropertyVerificationService,
+    OrderService,
+    TransactionService,
   ],
   exports: [RbacService],
 })
-export class AppModule {}
+export class AppModule { }

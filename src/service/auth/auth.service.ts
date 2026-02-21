@@ -8,7 +8,7 @@ import { RegisterRequestDto } from '../../model/request/register-request.dto';
 import { HashUtility } from '../../utility/hash-utility';
 import { UserRole } from '../../model/enum/role.enum';
 import { VerificationType } from '../../model/enum/verification-type';
-import { VerificationService } from '../verification/verification.service';
+import { ActionVerificationService } from '../action-verification/action-verification.service';
 import { AuthResponseDto } from '../../model/response/auth-response.dto';
 import { VerifyRegistrationDto } from '../../model/request/verify-registration.dto';
 import { DateUtility } from '../../utility/date-utility';
@@ -37,11 +37,11 @@ export class AuthService {
     @InjectRepository(LocationEntity)
     private readonly locationRepository: Repository<LocationEntity>,
     private readonly userService: UserService,
-    private readonly verificationService: VerificationService,
+    private readonly actionVerificationService: ActionVerificationService,
     private readonly emailService: EmailService,
     private readonly tokenService: TokenService,
     private readonly jwtService: CustomJwtService,
-  ) {}
+  ) { }
 
   async registerUser(registerRequestDto: RegisterRequestDto): Promise<string> {
     const {
@@ -91,7 +91,7 @@ export class AuthService {
     });
     await this.locationRepository.save(address);
 
-    await this.verificationService.create({
+    await this.actionVerificationService.create({
       verificationType: VerificationType.ACCOUNTVERIFICATION,
       user: newUser,
       tokenType: 'otp',
@@ -118,7 +118,7 @@ export class AuthService {
       throw new BadRequestException('Invalid credentials');
     }
 
-    await this.verificationService.verify(
+    await this.actionVerificationService.verify(
       {
         user,
         verificationType: VerificationType.ACCOUNTVERIFICATION,
@@ -256,7 +256,7 @@ export class AuthService {
       return 'Reset password link sent to your email';
     }
 
-    await this.verificationService.create({
+    await this.actionVerificationService.create({
       verificationType: VerificationType.PASSWORDRESET,
       tokenType: 'otp',
       user,
@@ -283,7 +283,7 @@ export class AuthService {
       throw new BadRequestException('Invalid Verification');
     }
 
-    await this.verificationService.verify(
+    await this.actionVerificationService.verify(
       {
         verificationType: VerificationType.PASSWORDRESET,
         tokenType: 'otp',
@@ -312,7 +312,7 @@ export class AuthService {
       throw new BadRequestException('Invalid email');
     }
 
-    await this.verificationService.delete({
+    await this.actionVerificationService.delete({
       user,
       verificationType: VerificationType.PASSWORDRESET,
       tokenType: 'otp',

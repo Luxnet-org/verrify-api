@@ -10,6 +10,8 @@ export class EmailRequest {
   template?: string;
 
   context: {
-    [index: string]: string;
+    [index: string]: any;
   };
+
+  attachments?: any[];
 }

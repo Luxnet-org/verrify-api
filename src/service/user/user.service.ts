@@ -28,7 +28,7 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly fileService: FileService,
-  ) {}
+  ) { }
 
   async findAll(
     userQuery: PaginationQueryDto,
@@ -207,9 +207,9 @@ export class UserService {
       role: user.role,
       dob: user.dob,
       phoneNumber: user.phoneNumber,
-      address: user.address.address ?? null,
-      city: user.address.city,
-      state: user.address.state,
+      address: user.address?.address ?? null,
+      city: user.address?.city ?? null,
+      state: user.address?.state ?? null,
       lastLogin: user.lastLogin,
       profileImage: user.profileImage ? user.profileImage.url : null,
       is2fa: user.is2fa,

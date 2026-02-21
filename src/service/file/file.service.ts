@@ -20,6 +20,7 @@ import { FileResponseDto } from '../../model/response/file-response.dto';
 import { Company } from '../../model/entity/company.entity';
 import { Property } from '../../model/entity/property.entity';
 import { Article } from '../../model/entity/article.entity';
+import { PropertyVerification } from '../../model/entity/property-verification.entity';
 
 @Injectable()
 export class FileService {
@@ -29,7 +30,7 @@ export class FileService {
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
     private readonly configService: ConfigService<ConfigInterface>,
-  ) {}
+  ) { }
 
   async uploadFileService(
     fileType: FileType,
@@ -91,6 +92,8 @@ export class FileService {
         'letterOfIntent',
         'deedOfConveyance',
         'articleTitleImage',
+        'propertyVerification',
+        'adminPropertyVerification',
       ],
     });
 
@@ -190,11 +193,29 @@ export class FileService {
         case FileType.ARTICLE_TITLE_IMAGE:
           if (fileEntity.articleTitleImage) {
             throw new BadRequestException(
-              'File is already associated with property',
+              'File is already associated with an article',
             );
           }
 
           fileEntity.articleTitleImage = entity as unknown as Article;
+          break;
+        case FileType.VERIFICATION_DOCUMENT:
+          if (fileEntity.propertyVerification) {
+            throw new BadRequestException(
+              'File is already associated with a property verification',
+            );
+          }
+
+          fileEntity.propertyVerification = entity as unknown as PropertyVerification;
+          break;
+        case FileType.ADMIN_STAGE_DOCUMENT:
+          if (fileEntity.adminPropertyVerification) {
+            throw new BadRequestException(
+              'File is already associated with a property verification stage',
+            );
+          }
+
+          fileEntity.adminPropertyVerification = entity as unknown as PropertyVerification;
           break;
         default:
           break;
@@ -209,6 +230,8 @@ export class FileService {
       fileEntity.certificationOfOccupancy = null;
       fileEntity.articleTitleImage = null;
       fileEntity.companyAddressFile = null;
+      fileEntity.propertyVerification = null;
+      fileEntity.adminPropertyVerification = null;
     }
 
     const updatedFile: FileEntity = await this.fileRepository.save(fileEntity);

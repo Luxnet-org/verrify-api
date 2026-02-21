@@ -48,6 +48,10 @@ export interface ConfigInterface {
     sheetsId: string;
     sheetsName: string;
   };
+  paystack: {
+    publicKey: string;
+    secretKey: string;
+  };
 }
 
 export const validationSchema = Joi.object({
@@ -87,6 +91,9 @@ export const validationSchema = Joi.object({
   GOOGLE_PRIVATE_KEY: Joi.string().required(),
   GOOGLE_SHEET_ID: Joi.string().required(),
   GOOGLE_SHEET_NAME: Joi.string().required(),
+
+  PAYSTACK_PUBLIC_KEY: Joi.string().required(),
+  PAYSTACK_SECRET_KEY: Joi.string().required(),
 });
 
 export const configuration = (): ConfigInterface => ({
@@ -135,5 +142,9 @@ export const configuration = (): ConfigInterface => ({
     privateKey: process.env.GOOGLE_PRIVATE_KEY!,
     sheetsId: process.env.GOOGLE_SHEET_ID!,
     sheetsName: process.env.GOOGLE_SHEET_NAME!,
+  },
+  paystack: {
+    publicKey: process.env.PAYSTACK_PUBLIC_KEY!,
+    secretKey: process.env.PAYSTACK_SECRET_KEY!,
   },
 });

@@ -27,12 +27,12 @@ import { Request } from 'express';
 import { UserInfo } from '../common/guards/auth.guard';
 import { CompanyProfileRequestDto } from '../model/request/create-company-profile.dto';
 import { UpdateCompanyProfileDto } from '../model/request/update-company-profile.dto';
-import { UpdateVerificationStatusDto } from '../model/request/update-verification-status.dto';
+import { VerdictDto } from '../model/request/verdict.dto';
 
 @ApiTags('Real Estate Company API')
 @Controller('company')
 export class CompanyController {
-  constructor(private readonly companyService: CompanyService) {}
+  constructor(private readonly companyService: CompanyService) { }
 
   @RequireRoles(UserRole.ADMIN)
   @ApiOperation({
@@ -112,27 +112,65 @@ export class CompanyController {
     return ApiResponse.success(response, HttpStatus.OK);
   }
 
-  @RequireRoles(UserRole.ADMIN)
-  @ApiOperation({
-    summary:
-      'Api endpoint to update company profile for user verification status',
-  })
+  @ApiOperation({ summary: 'Submit company profile for verification' })
   @SwaggerApiResponseData({
     type: 'string',
     status: HttpStatus.OK,
   })
-  @Patch('/update/verificationStatus/:id')
+  @Patch('/:id/submit')
   @HttpCode(HttpStatus.OK)
-  async updateVerificationStatus(
+  async submitForVerification(
     @Param('id') companyId: string,
-    @Body() verificationStatusDto: UpdateVerificationStatusDto,
     @Req() request: Request,
   ): Promise<ApiResponse<string>> {
     const userInfo: UserInfo = request.user!;
-    const response: string = await this.companyService.updateVerificationStatus(
+    const response: string = await this.companyService.submitForVerification(
       companyId,
       userInfo.userId,
-      verificationStatusDto,
+    );
+
+    return ApiResponse.success(response, HttpStatus.OK);
+  }
+
+  @RequireRoles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Assign company for review (admin only)' })
+  @SwaggerApiResponseData({
+    type: 'string',
+    status: HttpStatus.OK,
+  })
+  @Patch('/:id/assign-review')
+  @HttpCode(HttpStatus.OK)
+  async assignReview(
+    @Param('id') companyId: string,
+    @Req() request: Request,
+  ): Promise<ApiResponse<string>> {
+    const userInfo: UserInfo = request.user!;
+    const response: string = await this.companyService.assignReview(
+      companyId,
+      userInfo.userId,
+    );
+
+    return ApiResponse.success(response, HttpStatus.OK);
+  }
+
+  @RequireRoles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Give verdict on company (assigned reviewer only)' })
+  @SwaggerApiResponseData({
+    type: 'string',
+    status: HttpStatus.OK,
+  })
+  @Patch('/:id/verdict')
+  @HttpCode(HttpStatus.OK)
+  async giveVerdict(
+    @Param('id') companyId: string,
+    @Body() verdictDto: VerdictDto,
+    @Req() request: Request,
+  ): Promise<ApiResponse<string>> {
+    const userInfo: UserInfo = request.user!;
+    const response: string = await this.companyService.giveVerdict(
+      companyId,
+      userInfo.userId,
+      verdictDto,
     );
 
     return ApiResponse.success(response, HttpStatus.OK);

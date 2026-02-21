@@ -13,6 +13,9 @@ export class PropertyLookupResponseDto {
   name: string;
 
   @ApiProperty()
+  pin: string | null;
+
+  @ApiProperty()
   description: string;
 
   @ApiProperty()

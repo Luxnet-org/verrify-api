@@ -21,14 +21,18 @@ export class EmailService {
     subject: string,
     template: string,
     context: ISendMailOptions['context'],
+    attachments?: any[]
   ): Promise<void> {
-    const sendMailParams = {
+    const sendMailParams: ISendMailOptions = {
       to,
       from: this.configService.get('email.sender', { infer: true }),
       subject,
       template,
       context,
     };
+    if (attachments) {
+      sendMailParams.attachments = attachments;
+    }
 
     try {
       const response = await this.mailerService.sendMail(sendMailParams);
@@ -123,6 +127,25 @@ export class EmailService {
       emailRequest.to,
       '⚠️ Property Verification Update',
       'property-rejected-email-template',
+      emailRequest.context,
+    );
+  }
+
+  async sendVerificationPipelineUpdateMail(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      emailRequest.subject || 'Property Verification Update',
+      emailRequest.template || 'verification-pipeline-update-email-template',
+      emailRequest.context,
+      emailRequest.attachments
+    );
+  }
+
+  async sendPaymentReceiptMail(emailRequest: EmailRequest): Promise<void> {
+    await this.sendMail(
+      emailRequest.to,
+      'Payment Receipt - Verrify',
+      'payment-receipt-email-template',
       emailRequest.context,
     );
   }

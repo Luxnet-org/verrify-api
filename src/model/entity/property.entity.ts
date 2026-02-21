@@ -6,6 +6,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToOne,
+  Index,
 } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { PropertyType } from '../enum/property-type.enum';
@@ -23,6 +24,10 @@ export class Property extends Auditable {
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  @Index()
+  @Column({ type: 'varchar', nullable: true, unique: true })
+  pin: string;
+
   @Column({ type: 'boolean', default: false })
   isSubProperty: boolean;
 
@@ -38,10 +43,20 @@ export class Property extends Auditable {
   @Column({ type: 'text', nullable: true })
   verificationMessage: string;
 
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn()
+  reviewUser: User;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  reviewedAt: Date;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  verifiedAt: Date;
+
   @Column({ type: 'double precision', nullable: true })
   area: number;
 
-  @ManyToOne(() => Company)
+  @ManyToOne(() => Company, { nullable: true })
   @JoinColumn()
   company: Company;
 

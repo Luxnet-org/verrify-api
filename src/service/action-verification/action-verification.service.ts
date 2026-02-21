@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Verification } from '../../model/entity/verification.entity';
+import { ActionVerification } from '../../model/entity/action-verification.entity';
 import { Repository } from 'typeorm';
 import { VerificationRequest } from '../../model/request/verification-request.dto';
 import { HashUtility } from 'src/utility/hash-utility';
@@ -17,29 +17,29 @@ import { EmailType } from '../../model/enum/email-type.enum';
 import { VerificationType } from '../../model/enum/verification-type';
 
 @Injectable()
-export class VerificationService {
+export class ActionVerificationService {
   private logger: MyLoggerService = new MyLoggerService(
-    VerificationService.name,
+    ActionVerificationService.name,
   );
 
   constructor(
-    @InjectRepository(Verification)
-    private readonly verificationRepository: Repository<Verification>,
+    @InjectRepository(ActionVerification)
+    private readonly actionVerificationRepository: Repository<ActionVerification>,
     private readonly emailEvent: EmailEvent,
     private readonly configService: ConfigService<ConfigInterface>,
-  ) {}
+  ) { }
 
   async create(verificationRequest: VerificationRequest): Promise<void> {
     const { tokenType, user, verificationType }: VerificationRequest =
       verificationRequest;
 
-    const verification: Verification | null = await this.findVerification(
+    const actionVerification: ActionVerification | null = await this.findVerification(
       verificationType,
       user.email,
     );
 
-    if (verification) {
-      await this.verificationRepository.remove(verification);
+    if (actionVerification) {
+      await this.actionVerificationRepository.remove(actionVerification);
     }
 
     const token: string =
@@ -47,13 +47,13 @@ export class VerificationService {
         ? HashUtility.generateRandomHash()
         : HashUtility.generateSecureNumber();
 
-    const savedVerification: Verification = this.verificationRepository.create({
+    const savedVerification: ActionVerification = this.actionVerificationRepository.create({
       token: await HashUtility.generateHashValue(token),
       verificationType,
       destination: user.email,
       expireAt: DateUtility.addMinutes(15),
     });
-    await this.verificationRepository.save(savedVerification);
+    await this.actionVerificationRepository.save(savedVerification);
 
     const context: { [index: string]: any } = {
       name: user !== null ? user.firstName : 'user',
@@ -73,7 +73,7 @@ export class VerificationService {
 
     this.logger.log(
       `Verification of type: ${verificationType} sent`,
-      VerificationService.name,
+      ActionVerificationService.name,
     );
   }
 
@@ -83,70 +83,70 @@ export class VerificationService {
   ): Promise<void> {
     const { user, verificationType } = verificationRequest;
 
-    const verification: Verification | null = await this.findVerification(
+    const actionVerification: ActionVerification | null = await this.findVerification(
       verificationType,
       user.email,
     );
 
-    if (!verification) {
+    if (!actionVerification) {
       throw new NotFoundException('Verification not found');
     }
 
     const currentTime: Date = DateUtility.currentDate;
-    if (verification.expireAt < currentTime) {
-      await this.verificationRepository.delete(verification);
+    if (actionVerification.expireAt < currentTime) {
+      await this.actionVerificationRepository.delete(actionVerification);
       throw new BadRequestException('Expired Verification');
     }
 
-    if (!(await HashUtility.compareHash(token, verification.token))) {
+    if (!(await HashUtility.compareHash(token, actionVerification.token))) {
       throw new BadRequestException('Invalid Verification');
     }
 
-    verification.verified = true;
-    verification.expireAt = DateUtility.addMinutes(15);
+    actionVerification.verified = true;
+    actionVerification.expireAt = DateUtility.addMinutes(15);
 
-    await this.verificationRepository.save(verification);
+    await this.actionVerificationRepository.save(actionVerification);
 
     this.logger.log(
       `Verification of type: ${verificationType} verified`,
-      VerificationService.name,
+      ActionVerificationService.name,
     );
   }
 
   async delete(verifyRequest: VerificationRequest): Promise<void> {
     const { verificationType, user }: VerificationRequest = verifyRequest;
 
-    const verification: Verification | null =
-      await this.verificationRepository.findOne({
+    const actionVerification: ActionVerification | null =
+      await this.actionVerificationRepository.findOne({
         where: { destination: user.email, verificationType },
       });
 
-    if (!verification) {
+    if (!actionVerification) {
       throw new NotFoundException('Verification not found');
     }
 
     const currentTime: Date = DateUtility.currentDate;
-    if (verification.expireAt < currentTime) {
-      await this.verificationRepository.delete(verification);
+    if (actionVerification.expireAt < currentTime) {
+      await this.actionVerificationRepository.delete(actionVerification);
       throw new BadRequestException('Expired Verification');
     }
 
-    if (!verification.verified) {
+    if (!actionVerification.verified) {
       throw new NotFoundException('Verification not verified');
     }
 
-    await this.verificationRepository.softRemove(verification);
+    await this.actionVerificationRepository.softRemove(actionVerification);
     this.logger.log(
       `Verification of type: ${verificationType} deleted`,
-      VerificationService.name,
+      ActionVerificationService.name,
     );
   }
 
   private async findVerification(
     verificationType: VerificationType,
     destination: string,
-  ): Promise<Verification | null> {
-    return await this.verificationRepository.findOneBy({
+  ): Promise<ActionVerification | null> {
+    return await this.actionVerificationRepository.findOneBy({
       verificationType,
       destination,
     });

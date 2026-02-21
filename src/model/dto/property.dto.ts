@@ -11,6 +11,9 @@ export class PropertyDto extends DateDto {
   name: string;
 
   @ApiProperty()
+  pin: string | null;
+
+  @ApiProperty()
   description: string;
 
   @ApiProperty()

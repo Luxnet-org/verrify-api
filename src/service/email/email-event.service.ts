@@ -45,6 +45,10 @@ export class EmailEvent implements OnModuleInit {
           await this.emailService.sendPropertyVerifiedMail(emailRequest);
         } else if (emailRequest.type === EmailType.PROPERTY_REJECTED) {
           await this.emailService.sendPropertyRejectedMail(emailRequest);
+        } else if (emailRequest.type === EmailType.VERIFICATION_PIPELINE_UPDATE) {
+          await this.emailService.sendVerificationPipelineUpdateMail(emailRequest);
+        } else if (emailRequest.type === EmailType.PAYMENT_RECEIPT) {
+          await this.emailService.sendPaymentReceiptMail(emailRequest);
         }
       },
     });

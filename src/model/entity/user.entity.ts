@@ -2,7 +2,7 @@ import { Entity } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { UserRole } from '../enum/role.enum';
 import { FileEntity } from './file.entity';
-import { Column, OneToOne } from 'typeorm';
+import { Column, OneToOne, Index } from 'typeorm';
 import { LocationEntity } from './location.entity';
 import { Company } from './company.entity';
 
@@ -23,6 +23,7 @@ export class User extends Auditable {
   @Column({ type: 'character varying', unique: true, nullable: true })
   username: string;
 
+  @Index()
   @Column({ type: 'character varying', unique: true })
   email: string;
 

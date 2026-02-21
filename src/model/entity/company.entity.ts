@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne, Index, ManyToOne } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { LocationEntity } from './location.entity';
 import { AddressFileTypeEnum } from '../enum/address-file-type.enum';
@@ -8,6 +8,7 @@ import { CompanyVerificationStatus } from '../enum/company-verification-status.e
 
 @Entity()
 export class Company extends Auditable {
+  @Index()
   @Column({ type: 'character varying', nullable: true, unique: true })
   name: string;
 
@@ -22,6 +23,16 @@ export class Company extends Auditable {
 
   @Column({ type: 'text', nullable: true })
   verificationMessage: string;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn()
+  reviewUser: User;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  reviewedAt: Date;
+
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  verifiedAt: Date;
 
   @Column({ type: 'enum', enum: AddressFileTypeEnum, nullable: true })
   proofOfAddressType: AddressFileTypeEnum;
