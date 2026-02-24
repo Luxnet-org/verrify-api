@@ -155,6 +155,8 @@ export class TransactionService {
                 const verification = order.propertyVerification;
                 if (verification) {
                     verification.stage = VerificationStageStatus.PAYMENT_VERIFIED;
+                    if (!verification.stageHistory) verification.stageHistory = [];
+                    verification.stageHistory.push({ stage: VerificationStageStatus.PAYMENT_VERIFIED, completedAt: new Date() });
                     // Generate Unique Case ID
                     verification.caseId = await this.generateCaseId(manager);
                     await manager.save(verification);

@@ -66,6 +66,8 @@ export class OrderService {
 
         // Update verification stage to PENDING_PAYMENT
         verification.stage = VerificationStageStatus.PENDING_PAYMENT;
+        if (!verification.stageHistory) verification.stageHistory = [];
+        verification.stageHistory.push({ stage: VerificationStageStatus.PENDING_PAYMENT, completedAt: new Date() });
         await this.propertyVerificationRepository.save(verification);
 
         return savedOrder;

@@ -104,6 +104,7 @@ export class PropertyVerificationService {
                 property: property,
                 user: user,
                 stage: VerificationStageStatus.INITIATED,
+                stageHistory: [{ stage: VerificationStageStatus.INITIATED, completedAt: new Date() }],
             });
 
             const savedVerification = await manager.save(PropertyVerification, verification);
@@ -225,6 +226,7 @@ export class PropertyVerificationService {
         }
 
         verification.stage = VerificationStageStatus.PENDING_ACCEPTANCE;
+        this.appendStageHistory(verification, VerificationStageStatus.PENDING_ACCEPTANCE);
 
         // Optionally update the core property status to pending as well
         if (verification.property.propertyVerificationStatus === PropertyVerificationStatus.NOT_VERIFIED) {
@@ -283,6 +285,7 @@ export class PropertyVerificationService {
         }
 
         verification.stage = VerificationStageStatus.IN_REVIEW;
+        this.appendStageHistory(verification, VerificationStageStatus.IN_REVIEW);
         verification.reviewUser = admin;
         verification.reviewedAt = new Date();
 
@@ -307,6 +310,7 @@ export class PropertyVerificationService {
 
         if (dto.verdict === PropertyVerificationVerdict.ACCEPTED) {
             verification.stage = VerificationStageStatus.VERIFICATION_ACCEPTED;
+            this.appendStageHistory(verification, VerificationStageStatus.VERIFICATION_ACCEPTED);
             if (dto.comments) verification.adminComments = dto.comments;
             const savedVerification = await this.propertyVerificationRepository.save(verification);
 
@@ -324,6 +328,7 @@ export class PropertyVerificationService {
             return this.convertToDto(savedVerification);
         } else {
             verification.stage = VerificationStageStatus.VERIFICATION_REJECTED;
+            this.appendStageHistory(verification, VerificationStageStatus.VERIFICATION_REJECTED);
             if (dto.comments) verification.adminComments = dto.comments;
 
             verification.property.propertyVerificationStatus = PropertyVerificationStatus.NOT_VERIFIED;
@@ -376,6 +381,7 @@ export class PropertyVerificationService {
         }
 
         verification.stage = nextStage;
+        this.appendStageHistory(verification, nextStage);
         if (comments) verification.adminComments = comments;
         if (files && files.length > 0) {
             await Promise.all(files.map(url =>
@@ -477,6 +483,11 @@ export class PropertyVerificationService {
         return verification;
     }
 
+    private appendStageHistory(verification: PropertyVerification, stage: VerificationStageStatus): void {
+        if (!verification.stageHistory) verification.stageHistory = [];
+        verification.stageHistory.push({ stage, completedAt: new Date() });
+    }
+
     public convertToDto(verification: PropertyVerification): PropertyVerificationDto {
         return {
             id: verification.id,
@@ -491,6 +502,7 @@ export class PropertyVerificationService {
             property: verification.property ? this.propertyService.convertToDto(verification.property) : null,
             user: verification.user ? this.userService.convertToDto(verification.user) : null,
             reviewUser: verification.reviewUser ? this.userService.convertToDto(verification.reviewUser) : null,
+            stageHistory: (verification.stageHistory || []) as any,
         };
     }
 }

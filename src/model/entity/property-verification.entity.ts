@@ -39,6 +39,9 @@ export class PropertyVerification extends Auditable {
     @Column({ type: 'timestamp with time zone', nullable: true })
     reviewedAt: Date;
 
+    @Column({ type: 'simple-json', default: '[]' })
+    stageHistory: { stage: string; completedAt: Date }[];
+
     @OneToMany(() => FileEntity, (file) => file.propertyVerification)
     verificationFiles: FileEntity[];
 

@@ -1,4 +1,4 @@
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -20,9 +20,10 @@ import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 @Controller('contact-us')
 @UseGuards(ThrottlerGuard)
 export class ContactUsController {
-  constructor(private readonly contactUsService: ContactUsService) {}
+  constructor(private readonly contactUsService: ContactUsService) { }
 
   @Public()
+  @ApiOperation({ summary: 'Subscribe to newsletter' })
   @Post('newsletter')
   @SwaggerApiResponseData({
     type: 'string',
@@ -37,6 +38,7 @@ export class ContactUsController {
   }
 
   @Public()
+  @ApiOperation({ summary: 'Submit a contact request' })
   @Post('request')
   @SwaggerApiResponseData({
     type: 'string',
