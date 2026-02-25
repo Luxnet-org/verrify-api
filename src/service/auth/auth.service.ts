@@ -258,7 +258,7 @@ export class AuthService {
 
     await this.actionVerificationService.create({
       verificationType: VerificationType.PASSWORDRESET,
-      tokenType: 'otp',
+      tokenType: 'token',
       user,
     });
 
