@@ -62,7 +62,7 @@ export class ActionVerificationService {
 
     if (tokenType === 'token') {
       context.actionUrl = `${this.configService.get('app.frontendHost', { infer: true })}/verifyUser/?token=${token}&email=${user.email}`;
-      context.resetLink = context.actionUrl;
+      context.resetLink = `${this.configService.get('app.frontendHost', { infer: true })}/verifyUser/?token=${token}&email=${user.email}`;
     } else {
       context.token = token;
     }
