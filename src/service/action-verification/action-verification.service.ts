@@ -60,9 +60,14 @@ export class ActionVerificationService {
       name: user !== null ? user.firstName : 'user',
     };
 
-    if (tokenType === 'token') {
-      context.actionUrl = `${this.configService.get('app.frontendHost', { infer: true })}/verifyUser/?token=${token}&email=${user.email}`;
-      context.resetLink = `${this.configService.get('app.frontendHost', { infer: true })}/verifyUser/?token=${token}&email=${user.email}`;
+    const frontendHost = this.configService.get('app.frontendHost', { infer: true });
+
+    if (verificationType === VerificationType.PASSWORDRESET) {
+      context.resetLink = `${frontendHost}/reset-password?token=${token}&email=${user.email}`;
+      context.token = token;
+    } else if (tokenType === 'token') {
+      context.actionUrl = `${frontendHost}/verifyUser/?token=${token}&email=${user.email}`;
+      context.resetLink = context.actionUrl;
     } else {
       context.token = token;
     }
