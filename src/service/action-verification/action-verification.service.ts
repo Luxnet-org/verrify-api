@@ -56,11 +56,13 @@ export class ActionVerificationService {
     await this.actionVerificationRepository.save(savedVerification);
 
     const context: { [index: string]: any } = {
+      username: user !== null ? user.firstName : 'user',
       name: user !== null ? user.firstName : 'user',
     };
 
     if (tokenType === 'token') {
-      context.resetLink = `${this.configService.get('app.frontendHost', { infer: true })}/verifyUser/?token=${token}&email=${user.email}`;
+      context.actionUrl = `${this.configService.get('app.frontendHost', { infer: true })}/verifyUser/?token=${token}&email=${user.email}`;
+      context.resetLink = context.actionUrl;
     } else {
       context.token = token;
     }

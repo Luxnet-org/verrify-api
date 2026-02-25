@@ -29,6 +29,8 @@ import { EmailEvent } from '../email/email-event.service';
 import { EmailRequest } from '../../model/request/email-request.dto';
 import { EmailType } from '../../model/enum/email-type.enum';
 import { VerdictDto } from '../../model/request/verdict.dto';
+import { ConfigService } from '@nestjs/config';
+import { ConfigInterface } from '../../config-module/configuration';
 
 @Injectable()
 export class CompanyService {
@@ -44,6 +46,7 @@ export class CompanyService {
     @InjectRepository(LocationEntity)
     private readonly locationRepository: Repository<LocationEntity>,
     private readonly emailEvent: EmailEvent,
+    private readonly configService: ConfigService<ConfigInterface>,
   ) { }
 
   async findAll(
@@ -373,7 +376,7 @@ export class CompanyService {
       type: EmailType.COMPANY_SUBMITTED,
       to: company.user.email,
       context: {
-        userName: company.user.firstName,
+        name: company.user.firstName,
         companyName: company.name,
       },
     };
@@ -452,6 +455,7 @@ export class CompanyService {
     await this.companyRepository.save(company);
 
     // Send verdict email
+    const frontendUrl = this.configService.get('app.frontendHost', { infer: true }) || 'https://verrify.net';
     const emailRequest: EmailRequest = {
       type:
         newStatus === CompanyVerificationStatus.VERIFIED
@@ -459,10 +463,10 @@ export class CompanyService {
           : EmailType.COMPANY_REJECTED,
       to: company.user.email,
       context: {
-        userName: company.user.firstName,
+        name: company.user.firstName,
         companyName: company.name,
-        companyDescription: company.description || '',
-        rejectionMessage: verdictDto.verificationMessage,
+        rejectionReason: verdictDto.verificationMessage,
+        dashboardLink: `${frontendUrl}/user/dashboard/company`,
       },
     };
     await this.emailEvent.sendEmailRequest(emailRequest);

@@ -41,6 +41,8 @@ import { PropertySearchQueryDto } from '../../model/request/property-search.dto'
 import { EmailEvent } from '../email/email-event.service';
 import { EmailRequest } from '../../model/request/email-request.dto';
 import { EmailType } from '../../model/enum/email-type.enum';
+import { ConfigService } from '@nestjs/config';
+import { ConfigInterface } from '../../config-module/configuration';
 
 @Injectable()
 export class PropertyService {
@@ -58,6 +60,7 @@ export class PropertyService {
     private readonly userService: UserService,
     private readonly emailEvent: EmailEvent,
     private readonly dataSource: DataSource,
+    private readonly configService: ConfigService<ConfigInterface>,
   ) { }
 
   async create(
@@ -495,7 +498,7 @@ export class PropertyService {
       type: EmailType.PROPERTY_SUBMITTED,
       to: property.company.user.email,
       context: {
-        userName: property.company.user.firstName,
+        name: property.company.user.firstName,
         propertyName: property.name,
         propertyType: property.propertyType,
       },
@@ -606,6 +609,10 @@ export class PropertyService {
     await this.propertyRepository.save(property);
 
     // Send verdict email
+    const frontendUrl = this.configService.get('app.frontendHost', { infer: true }) || 'https://verrify.net';
+    const locationStr = property.location
+      ? [property.location.address, property.location.city, property.location.state].filter(Boolean).join(', ')
+      : '';
     const emailRequest: EmailRequest = {
       type:
         newStatus === PropertyVerificationStatus.VERIFIED
@@ -613,11 +620,12 @@ export class PropertyService {
           : EmailType.PROPERTY_REJECTED,
       to: property.company.user.email,
       context: {
-        userName: property.company.user.firstName,
+        name: property.company.user.firstName,
         propertyName: property.name,
-        propertyType: property.propertyType,
-        propertyDescription: property.description || '',
-        rejectionMessage: verdictDto.verificationMessage,
+        location: locationStr,
+        rejectionReason: verdictDto.verificationMessage,
+        listingLink: `${frontendUrl}/user/dashboard/properties/${property.id}`,
+        dashboardLink: `${frontendUrl}/user/dashboard/properties`,
       },
     };
     await this.emailEvent.sendEmailRequest(emailRequest);

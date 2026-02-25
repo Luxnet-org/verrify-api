@@ -26,7 +26,7 @@ export class ContactUsService {
     private readonly configService: ConfigService<ConfigInterface>,
     private readonly emailEventService: EmailEvent,
     private readonly contactEventService: ContactEventService,
-  ) {}
+  ) { }
 
   async subscribeRequest(
     request: SubscribeNewsletterRequestDto,
@@ -55,9 +55,10 @@ export class ContactUsService {
       type: EmailType.CONTACTMEREPLY,
       to: email,
       context: {
-        userName: name,
-        message: message,
-        supportMail,
+        name: name,
+        subject: 'Your Contact Request',
+        responseMessage: `Thank you for reaching out to us. We have received your message and will get back to you shortly.`,
+        helpCenterLink: `${this.configService.get('app.frontendHost', { infer: true })}/help`,
       },
     });
 
@@ -65,10 +66,12 @@ export class ContactUsService {
       type: EmailType.ADMINCONTACTMEREPLY,
       to: supportMail,
       context: {
-        userName: name,
+        senderName: name,
+        senderEmail: email,
+        subject: 'Contact Form Submission',
         message,
-        email,
         phone: phone ? phone : 'Not Provided',
+        adminResponseLink: `${this.configService.get('app.frontendHost', { infer: true })}/admin`,
       },
     });
 
