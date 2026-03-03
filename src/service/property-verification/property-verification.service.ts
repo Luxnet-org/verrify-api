@@ -476,7 +476,7 @@ export class PropertyVerificationService {
 
         const user: User = await this.userService.findById(userId);
 
-        if (verification.user.id !== userId || user.role === UserRole.USER) {
+        if (verification.user.id !== userId && user.role === UserRole.USER) {
             throw new UnauthorizedException('You do not have permission to access this verification request');
         }
 
