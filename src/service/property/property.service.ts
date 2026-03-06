@@ -517,7 +517,7 @@ export class PropertyService {
   ): Promise<string> {
     const admin: User = await this.userService.findById(adminUserId);
 
-    if (admin.role !== UserRole.ADMIN) {
+    if (admin.role !== UserRole.ADMIN && admin.role !== UserRole.SUPER_ADMIN) {
       throw new UnauthorizedException('Only admins can assign reviews');
     }
 
@@ -1276,7 +1276,7 @@ export class PropertyService {
   ): Promise<PropertyDto> {
     const admin: User = await this.userService.findById(adminUserId);
 
-    if (admin.role !== UserRole.ADMIN) {
+    if (admin.role !== UserRole.ADMIN && admin.role !== UserRole.SUPER_ADMIN) {
       throw new UnauthorizedException('Only admins can override property details');
     }
 

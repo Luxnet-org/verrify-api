@@ -247,7 +247,7 @@ export class CompanyService {
 
     const user: User = await this.userService.findById(userId);
 
-    if (company.user.id !== user.id && user.role !== UserRole.ADMIN) {
+    if (company.user.id !== user.id && user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN) {
       throw new UnauthorizedException(
         'Access denied to modify company profile',
       );
@@ -275,7 +275,7 @@ export class CompanyService {
     if (proofOfAddress || address || name) {
       if (
         company.user.id === user.id &&
-        user.role !== UserRole.ADMIN &&
+        user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN &&
         (company.companyVerificationStatus ===
           CompanyVerificationStatus.PENDING ||
           company.companyVerificationStatus ===
@@ -394,7 +394,7 @@ export class CompanyService {
   ): Promise<string> {
     const admin: User = await this.userService.findById(adminUserId);
 
-    if (admin.role !== UserRole.ADMIN) {
+    if (admin.role !== UserRole.ADMIN && admin.role !== UserRole.SUPER_ADMIN) {
       throw new UnauthorizedException('Only admins can assign reviews');
     }
 

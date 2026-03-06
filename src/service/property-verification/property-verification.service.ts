@@ -265,7 +265,7 @@ export class PropertyVerificationService {
     async assignReview(verificationId: string, adminUserId: string): Promise<PropertyVerificationDto> {
         const admin: User = await this.userService.findById(adminUserId);
 
-        if (admin.role !== UserRole.ADMIN) {
+        if (admin.role !== UserRole.ADMIN && admin.role !== UserRole.SUPER_ADMIN) {
             throw new UnauthorizedException('Only admins can assign reviews');
         }
 
