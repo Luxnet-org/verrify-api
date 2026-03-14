@@ -29,11 +29,13 @@ export class EmailService {
     template: string,
     context: ISendMailOptions['context'],
     attachments?: any[],
+    fromName?: string,
+    fromEmail?: string,
   ): Promise<void> {
     if (this.provider === 'resend') {
-      await this.sendViaResend(to, subject, template, context, attachments);
+      await this.sendViaResend(to, subject, template, context, attachments, fromName, fromEmail);
     } else {
-      await this.sendViaSmtp(to, subject, template, context, attachments);
+      await this.sendViaSmtp(to, subject, template, context, attachments, fromName, fromEmail);
     }
   }
 
@@ -43,6 +45,8 @@ export class EmailService {
     template: string,
     context: ISendMailOptions['context'],
     attachments?: any[],
+    fromName?: string,
+    fromEmail?: string,
   ): Promise<void> {
     if (!this.mailerService) {
       throw new Error(
@@ -50,9 +54,13 @@ export class EmailService {
       );
     }
 
+    const senderName = fromName || 'Verrify';
+    const senderEmailStr = fromEmail || this.configService.get('email.sender', { infer: true });
+    const fromString = `"${senderName}" <${senderEmailStr}>`;
+
     const sendMailParams: ISendMailOptions = {
       to,
-      from: this.configService.get('email.sender', { infer: true }),
+      from: fromString,
       subject,
       template,
       context,
@@ -79,6 +87,8 @@ export class EmailService {
     template: string,
     context: ISendMailOptions['context'],
     attachments?: any[],
+    fromName?: string,
+    fromEmail?: string,
   ): Promise<void> {
     const templateFn = TEMPLATE_MAP[template];
     if (!templateFn) {
@@ -92,7 +102,7 @@ export class EmailService {
       ...(a.content ? { content: a.content } : {}),
     }));
 
-    await this.resendEmailService.sendMail(to, subject, html, resendAttachments);
+    await this.resendEmailService.sendMail(to, subject, html, resendAttachments, fromName, fromEmail);
   }
 
   async sendAccountVerificationMail(emailRequest: EmailRequest): Promise<void> {
@@ -129,9 +139,11 @@ export class EmailService {
   async sendContactMeReply(emailRequest: EmailRequest): Promise<void> {
     await this.sendMail(
       emailRequest.to,
-      'Thank you for Reaching Out',
+      "Welcome to Verrify! Let's Secure Your Property Investment",
       'contact-respond-email-template',
       emailRequest.context,
+      undefined,
+      "Ifunanya from Verrify"
     );
   }
 

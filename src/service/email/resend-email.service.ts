@@ -39,11 +39,18 @@ export class ResendEmailService {
     subject: string,
     html: string,
     attachments?: ResendAttachment[],
+    fromName?: string,
+    fromEmail?: string,
   ): Promise<void> {
     const toArray = Array.isArray(to) ? to : [to];
 
+    const senderName = fromName || 'Verrify';
+    const senderEmailStr = fromEmail || this.sender;
+
+    const fromString = `${senderName} <${senderEmailStr}>`;
+
     const payload: Parameters<typeof this.resend.emails.send>[0] = {
-      from: this.sender,
+      from: fromString,
       to: toArray,
       subject,
       html,

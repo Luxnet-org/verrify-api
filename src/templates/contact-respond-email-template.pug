@@ -1,25 +1,33 @@
 extends layout.pug
 
 block content
-  h1 Response to your inquiry
-  
+  h1 Welcome to Verrify! Let's Secure Your Property Investment
+
   .hero-illustration
-    // Placeholder for "Support/Response" icon
-    img(src="https://placehold.co/120x120/111827/FFFFFF/png?text=Reply&font=roboto", alt="Support Response", style="display:inline-block;")
-  
-  p(style="text-align: center; font-size: 16px; margin-bottom: 24px;") Hello #{name || 'User'},
-  
+    img(src="https://res.cloudinary.com/dj7reukeb/image/upload/v1770549817/Frame_2147228600_dcdoe7.png", alt="Welcome to Verrify", style="display:inline-block;max-width:100%;height:auto;")
+
+  p(style="text-align: center; font-size: 16px; margin-bottom: 24px;") Dear #{name || 'User'},
+
   p(style="text-align: center; margin-bottom: 30px;")
-    | Thank you for contacting Verrify Support. Regarding your inquiry about "<strong>#{subject}</strong>", here is our response:
-  
-  div(style="background-color: #F9FAFB; padding: 24px; border-radius: 8px; border-left: 4px solid #4F46E5; margin-bottom: 30px; text-align: left; font-style: italic;")
-    | "#{responseMessage}"
-  
+    | Thank you for reaching out to Verrify! We're glad you're taking this important step toward confirming property ownership.
+
+  p(style="text-align: center; margin-bottom: 16px; font-weight: 600;")
+    | To help us prepare for our conversation, please take 2 minutes to fill out this quick form:
+
+  div(style="text-align: center; margin-bottom: 30px;")
+    a.btn(href="https://forms.gle/DA4L2uxaQHM5HTdb6") Verrify Property Verification Request
+
+  p(style="text-align: center; margin-bottom: 16px; font-weight: 600;")
+    | Once you've done that, pick a time that works for you and let's talk:
+
+  div(style="text-align: center; margin-bottom: 30px;")
+    a.btn(href="http://calendly.com/verrifyproperties") Book a Call on Calendly
+
+  p(style="text-align: center; margin-bottom: 30px;")
+    | On the call, we'll learn about your property, answer your questions, and walk you through how we can help.
+
+  p(style="text-align: center; margin-bottom: 4px;") Talk soon,
+  p(style="text-align: center; font-weight: 600; margin-bottom: 4px;") Ifunanya Anazonwu
   p(style="text-align: center;")
-    | If you have further questions, please reply directly to this email or visit our Help Center.
-  
-  div(style="text-align: center;")
-    a.btn(href=helpCenterLink || "#") Visit Help Center
-  
-  p(style="text-align: center;")
-    strong The Verrify Support Team
+    strong The Verrify Team
+

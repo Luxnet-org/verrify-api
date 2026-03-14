@@ -99,14 +99,14 @@ function wrapInLayout(contentHtml: string): string {
       <tr><td class="footer">
         <div class="social-links">
           <a class="social-icon" href="#"><img src="https://img.icons8.com/ios-filled/50/000000/facebook-new.png" alt="Facebook" width="24"></a>
-          <a class="social-icon" href="https://x.com/Verrify_"><img src="https://img.icons8.com/ios-filled/50/000000/twitterx--v1.png" alt="Twitter" width="24"></a>
-          <a class="social-icon" href="https://www.instagram.com/ver.rify"><img src="https://img.icons8.com/ios-filled/50/000000/instagram-new.png" alt="Instagram" width="24"></a>
-          <a class="social-icon" href="https://www.linkedin.com/company/verrify"><img src="https://img.icons8.com/ios-filled/50/000000/linkedin.png" alt="LinkedIn" width="24"></a>
+          <a class="social-icon" href="https://x.com/verrify_?s=21"><img src="https://img.icons8.com/ios-filled/50/000000/twitterx--v1.png" alt="Twitter" width="24"></a>
+          <a class="social-icon" href="https://www.instagram.com/ver.rify?igsh=MWNiNWd2czIxaTJ2NA%3D%3D&utm_source=qr"><img src="https://img.icons8.com/ios-filled/50/000000/instagram-new.png" alt="Instagram" width="24"></a>
+          <a class="social-icon" href="https://www.linkedin.com/company/verrify/"><img src="https://img.icons8.com/ios-filled/50/000000/linkedin.png" alt="LinkedIn" width="24"></a>
         </div>
         <div class="footer-links">
           <a href="#">Help</a> | <a href="#">Contact Us</a> | <a href="#">Terms</a> | <a href="#">Privacy</a> | <a href="#">Unsubscribe</a>
         </div>
-        <p class="copyright">&copy; ${year} Verrify Inc. All rights reserved.<br>123 Innovation Drive, Tech City, TC 90210</p>
+        <p class="copyright">&copy; ${year} Verrify Inc. All rights reserved</p>
       </td></tr>
     </table>
   </td></tr></table>
@@ -171,23 +171,26 @@ export function resetPasswordTemplate(ctx: Record<string, any>): string {
   `);
 }
 
-// ─── 4. Contact Me Reply ────────────────────────────────────────────────────
+// ─── 4. Contact Me Reply (Welcome Email after Website Contact) ──────────────
 export function contactRespondTemplate(ctx: Record<string, any>): string {
   const name = escapeHtml(ctx.name || 'User');
-  const subject = escapeHtml(ctx.subject || '');
-  const responseMessage = escapeHtml(ctx.responseMessage || '');
-  const helpCenterLink = ctx.helpCenterLink || '#';
   return wrapInLayout(`
-    <h1>Response to your inquiry</h1>
-    <div class="hero-illustration">
-      <img src="https://placehold.co/120x120/111827/FFFFFF/png?text=Reply&font=roboto" alt="Support Response" style="display:inline-block;">
+    <h1>Welcome to Verrify! Let's Secure Your Property Investment</h1>
+    <div class="hero-illustration" style="text-align:center;">
+      <img src="https://res.cloudinary.com/dj7reukeb/image/upload/v1770549817/Frame_2147228600_dcdoe7.png" alt="Welcome to Verrify" style="display:inline-block;max-width:100%;height:auto;">
     </div>
-    <p style="text-align:center;font-size:16px;margin-bottom:24px;">Hello ${name},</p>
-    <p style="text-align:center;margin-bottom:30px;">Thank you for contacting Verrify Support. Regarding your inquiry about "<strong>${subject}</strong>", here is our response:</p>
-    <div style="background-color:#F9FAFB;padding:24px;border-radius:8px;border-left:4px solid #4F46E5;margin-bottom:30px;text-align:left;font-style:italic;">"${responseMessage}"</div>
-    <p style="text-align:center;">If you have further questions, please reply directly to this email or visit our Help Center.</p>
-    <div style="text-align:center;"><a class="btn" href="${escapeHtml(helpCenterLink)}">Visit Help Center</a></div>
-    <p style="text-align:center;"><strong>The Verrify Support Team</strong></p>
+    <p style="text-align:center;font-size:16px;margin-bottom:24px;">Dear ${name},</p>
+    <p style="text-align:center;margin-bottom:30px;">Thank you for reaching out to Verrify! We're glad you're taking this important step toward confirming property ownership.</p>
+    <p style="text-align:center;margin-bottom:16px;font-weight:600;">To help us prepare for our conversation, please take 2 minutes to fill out this quick form:</p>
+    <div style="text-align:center;margin-bottom:30px;"><a class="btn" href="https://forms.gle/DA4L2uxaQHM5HTdb6">Verrify Property Verification Request</a></div>
+    <p style="text-align:center;margin-bottom:16px;font-weight:600;">Once you've done that, pick a time that works for you and let's talk:</p>
+    <div style="text-align:center;margin-bottom:30px;"><a class="btn" href="http://calendly.com/verrifyproperties">Book a Call on Calendly</a></div>
+    <p style="text-align:center;margin-bottom:30px;">On the call, we'll learn about your property, answer your questions, and walk you through how we can help.</p>
+    <p style="text-align:center;margin-bottom:4px;">Talk soon,</p>
+    <p style="text-align:center;font-weight:600;margin-bottom:4px;">Ifunanya Anazonwu</p>
+    <p style="text-align:center;"><strong>The Verrify Team</strong></p>
+    <hr style="border:0;border-top:1px solid #E5E7EB;margin:30px 0;">
+    <p style="text-align:center;font-size:14px;color:#9CA3AF;">Website: <a href="https://www.verrify.io" style="color:#4F46E5;">verrify.io</a> | Follow us: <a href="https://www.instagram.com/ver.rify?igsh=MWNiNWd2czIxaTJ2NA%3D%3D&utm_source=qr" style="color:#4F46E5;">Instagram</a> | <a href="https://x.com/verrify_?s=21" style="color:#4F46E5;">X</a> | <a href="https://www.linkedin.com/company/verrify/" style="color:#4F46E5;">LinkedIn</a></p>
   `);
 }
 
