@@ -51,6 +51,7 @@
     "pg": "^8.13.3",
     "pug": "^3.0.3",
     "reflect-metadata": "^0.2.2",
+    "resend": "^6.9.3",
     "rimraf": "^3.0.2",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",

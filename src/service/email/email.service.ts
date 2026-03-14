@@ -1,28 +1,55 @@
 import { ISendMailOptions, MailerService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { MyLoggerService } from '../logger/my-logger.service';
 import { EmailRequest } from '../../model/request/email-request.dto';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from 'src/config-module/configuration';
+import { ResendEmailService } from './resend-email.service';
+import { TEMPLATE_MAP } from './html-templates';
 
 @Injectable()
 export class EmailService {
   private readonly logger: MyLoggerService = new MyLoggerService(
     EmailService.name,
   );
+  private readonly provider: 'resend' | 'smtp';
 
   constructor(
-    private readonly mailerService: MailerService,
+    @Optional() private readonly mailerService: MailerService,
     private readonly configService: ConfigService<ConfigInterface>,
-  ) { }
+    private readonly resendEmailService: ResendEmailService,
+  ) {
+    this.provider = this.configService.get('email.provider', { infer: true }) || 'smtp';
+    this.logger.log(`Email provider: ${this.provider}`, EmailService.name);
+  }
 
   private async sendMail(
     to: string | string[],
     subject: string,
     template: string,
     context: ISendMailOptions['context'],
-    attachments?: any[]
+    attachments?: any[],
   ): Promise<void> {
+    if (this.provider === 'resend') {
+      await this.sendViaResend(to, subject, template, context, attachments);
+    } else {
+      await this.sendViaSmtp(to, subject, template, context, attachments);
+    }
+  }
+
+  private async sendViaSmtp(
+    to: string | string[],
+    subject: string,
+    template: string,
+    context: ISendMailOptions['context'],
+    attachments?: any[],
+  ): Promise<void> {
+    if (!this.mailerService) {
+      throw new Error(
+        'MailerService is not available. EMAIL_PROVIDER is set to "smtp" but MailerModule was not loaded.',
+      );
+    }
+
     const sendMailParams: ISendMailOptions = {
       to,
       from: this.configService.get('email.sender', { infer: true }),
@@ -35,15 +62,37 @@ export class EmailService {
     }
 
     try {
-      const response = await this.mailerService.sendMail(sendMailParams);
-      this.logger.log(`Email sent`, EmailService.name);
+      await this.mailerService.sendMail(sendMailParams);
+      this.logger.log(`Email sent via SMTP`, EmailService.name);
     } catch (error) {
       this.logger.error(
-        `Error while sending email, Message: ${error.message}`,
+        `Error while sending email via SMTP, Message: ${error.message}`,
         EmailService.name,
       );
       throw new Error('Error while sending email');
     }
+  }
+
+  private async sendViaResend(
+    to: string | string[],
+    subject: string,
+    template: string,
+    context: ISendMailOptions['context'],
+    attachments?: any[],
+  ): Promise<void> {
+    const templateFn = TEMPLATE_MAP[template];
+    if (!templateFn) {
+      throw new Error(`No HTML template found for: ${template}`);
+    }
+
+    const html = templateFn(context || {});
+    const resendAttachments = attachments?.map((a) => ({
+      filename: a.filename || 'attachment',
+      ...(a.path ? { path: a.path } : {}),
+      ...(a.content ? { content: a.content } : {}),
+    }));
+
+    await this.resendEmailService.sendMail(to, subject, html, resendAttachments);
   }
 
   async sendAccountVerificationMail(emailRequest: EmailRequest): Promise<void> {
@@ -137,7 +186,7 @@ export class EmailService {
       emailRequest.subject || 'Property Verification Update',
       emailRequest.template || 'verification-pipeline-update-email-template',
       emailRequest.context,
-      emailRequest.attachments
+      emailRequest.attachments,
     );
   }
 

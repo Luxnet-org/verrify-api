@@ -16,6 +16,8 @@ export interface ConfigInterface {
     port: number;
   };
   email: {
+    provider: 'resend' | 'smtp';
+    resendAPIKey: string;
     username: string;
     password: string;
     host: string;
@@ -66,10 +68,32 @@ export const validationSchema = Joi.object({
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().port().required(),
 
-  EMAIL_USERNAME: Joi.string().required(),
-  EMAIL_PASSWORD: Joi.string().required(),
-  EMAIL_HOST: Joi.string().required(),
-  EMAIL_PORT: Joi.number().port().required(),
+  EMAIL_PROVIDER: Joi.string().valid('resend', 'smtp').required(),
+  EMAIL_RESEND_API_KEY: Joi.string().when('EMAIL_PROVIDER', {
+    is: 'resend',
+    then: Joi.required(),
+    otherwise: Joi.optional().allow(''),
+  }),
+  EMAIL_USERNAME: Joi.string().when('EMAIL_PROVIDER', {
+    is: 'smtp',
+    then: Joi.required(),
+    otherwise: Joi.optional().allow(''),
+  }),
+  EMAIL_PASSWORD: Joi.string().when('EMAIL_PROVIDER', {
+    is: 'smtp',
+    then: Joi.required(),
+    otherwise: Joi.optional().allow(''),
+  }),
+  EMAIL_HOST: Joi.string().when('EMAIL_PROVIDER', {
+    is: 'smtp',
+    then: Joi.required(),
+    otherwise: Joi.optional().allow(''),
+  }),
+  EMAIL_PORT: Joi.number().port().when('EMAIL_PROVIDER', {
+    is: 'smtp',
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
   EMAIL_SENDER: Joi.string().required(),
   ADMIN_EMAIL: Joi.string().required(),
 
@@ -111,6 +135,8 @@ export const configuration = (): ConfigInterface => ({
     port: +process.env.DB_PORT!,
   },
   email: {
+    resendAPIKey: process.env.EMAIL_RESEND_API_KEY!,
+    provider: (process.env.EMAIL_PROVIDER || 'smtp') as ConfigInterface['email']['provider'],
     username: process.env.EMAIL_USERNAME!,
     password: process.env.EMAIL_PASSWORD!,
     host: process.env.EMAIL_HOST!,

@@ -3,6 +3,7 @@ import { MyLoggerService } from './service/logger/my-logger.service';
 import { MyConfigModule } from './config-module/config.module';
 import { RabbitMQService } from './service/rabbitmq/rabbitmq.service';
 import { EmailService } from './service/email/email.service';
+import { ResendEmailService } from './service/email/resend-email.service';
 import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from './config-module/configuration';
@@ -112,54 +113,57 @@ import { ThrottlerModule } from '@nestjs/throttler';
         };
       },
     }),
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (
-        configService: ConfigService<ConfigInterface>,
-      ): MailerOptions => {
-        const emailConfig = configService.get('email', { infer: true });
-        const appConfig = configService.get('app', { infer: true });
-        if (!emailConfig) {
-          throw new Error(
-            'Missing configuration for app or database. Check configuration.ts and .env settings.',
-          );
-        }
-        return {
-          transport: {
-            host: emailConfig.host,
-            port: emailConfig.port,
-            secure: false,
-            auth: {
-              user: emailConfig.username,
-              pass: emailConfig.password,
+    ...(process.env.EMAIL_PROVIDER === 'smtp'
+      ? [
+          MailerModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (
+              configService: ConfigService<ConfigInterface>,
+            ): MailerOptions => {
+              const emailConfig = configService.get('email', { infer: true });
+              const appConfig = configService.get('app', { infer: true });
+              if (!emailConfig) {
+                throw new Error(
+                  'Missing configuration for email. Check configuration.ts and .env settings.',
+                );
+              }
+              return {
+                transport: {
+                  host: emailConfig.host,
+                  port: emailConfig.port,
+                  secure: false,
+                  auth: {
+                    user: emailConfig.username,
+                    pass: emailConfig.password,
+                  },
+                  requireTLS: true,
+                  logger: appConfig?.env === 'dev',
+                  debug: appConfig?.env === 'dev',
+                  tls: {
+                    // rejectUnauthorized: false,
+                  },
+                  pool: true,
+                  maxConnections: 5,
+                  maxMessages: 100,
+                  connectionTimeout: 15000,
+                  socketTimeout: 20000,
+                },
+                defaults: {
+                  from: emailConfig.sender,
+                },
+                template: {
+                  dir: __dirname + '/templates',
+                  adapter: new PugAdapter(),
+                  options: {
+                    strict: true,
+                  },
+                },
+              };
             },
-            requireTLS: true,
-            logger: appConfig?.env === 'dev',
-            debug: appConfig?.env === 'dev',
-            tls: {
-              // rejectUnauthorized: false,
-            },
-            pool: true,
-            maxConnections: 5,
-            maxMessages: 100,
-            connectionTimeout: 15000,
-            socketTimeout: 20000,
-          },
-          defaults: {
-            from: emailConfig.sender,
-          },
-          template: {
-            dir: __dirname + '/templates',
-            adapter: new PugAdapter(),
-            options: {
-              strict: true,
-            },
-          },
-        };
-      },
-    }),
-
+          }),
+        ]
+      : []),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
@@ -211,6 +215,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     },
     MyLoggerService,
     EmailService,
+    ResendEmailService,
     RabbitMQService,
     TokenService,
     CustomJwtService,
