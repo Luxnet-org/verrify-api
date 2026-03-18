@@ -78,6 +78,22 @@ export class PaymentController {
     @ApiBearerAuth()
 
     @RequireRoles(UserRole.USER)
+    @Get('order/verification/:verificationId')
+    @ApiOperation({ summary: 'Get order details for a property verification' })
+    @SwaggerApiResponseData({ type: 'object', status: HttpStatus.OK })
+    @HttpCode(HttpStatus.OK)
+    async getOrderForVerification(
+        @Param('verificationId') verificationId: string,
+        @Req() request: Request,
+    ): Promise<ApiResponse<any>> {
+        const user: UserInfo = request.user!;
+        const result = await this.orderService.getOrderForVerification(verificationId, user.userId);
+        return ApiResponse.success(result, HttpStatus.OK);
+    }
+
+    @ApiBearerAuth()
+
+    @RequireRoles(UserRole.USER)
     @Get('my-transactions')
     @ApiOperation({ summary: 'List user transactions' })
     @SwaggerApiResponseData({ type: 'object', status: HttpStatus.OK })

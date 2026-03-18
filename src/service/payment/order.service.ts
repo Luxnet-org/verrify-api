@@ -92,6 +92,32 @@ export class OrderService {
         );
     }
 
+    async getOrderForVerification(verificationId: string, userId: string): Promise<any> {
+        const order = await this.orderRepository.findOne({
+            where: {
+                propertyVerification: { id: verificationId },
+                user: { id: userId },
+            },
+            relations: ['transactions', 'propertyVerification'],
+        });
+
+        if (!order) {
+            throw new NotFoundException('Order not found for this verification');
+        }
+
+        // Return order with transactions and trimmed property verification data
+        const { propertyVerification, ...orderData } = order;
+        return {
+            ...orderData,
+            propertyVerification: propertyVerification ? {
+                id: propertyVerification.id,
+                stage: propertyVerification.stage,
+                caseId: propertyVerification.caseId,
+                createdAt: (propertyVerification as any).createdAt,
+            } : null,
+        };
+    }
+
     async getAdminOrders(queryDto: PaginationQueryDto, status?: OrderStatus, userId?: string): Promise<PaginationAndSortingResult<Order>> {
         const where: any = {};
         if (status) where.status = status;

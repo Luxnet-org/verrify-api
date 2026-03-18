@@ -22,6 +22,9 @@ export class Transaction extends Auditable {
     @Column({ type: 'enum', enum: TransactionStatus, default: TransactionStatus.PENDING })
     status: TransactionStatus;
 
+    @Column({ type: 'varchar', nullable: true })
+    authorizationUrl: string;
+
     @ManyToOne(() => Order, (order) => order.transactions)
     @JoinColumn()
     order: Order;

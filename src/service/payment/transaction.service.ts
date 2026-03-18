@@ -84,6 +84,7 @@ export class TransactionService {
             const transaction = this.transactionRepository.create({
                 amount: order.amount,
                 paystackReference: data.reference,
+                authorizationUrl: data.authorization_url,
                 status: TransactionStatus.PENDING,
                 order,
             });
