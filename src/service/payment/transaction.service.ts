@@ -132,7 +132,7 @@ export class TransactionService {
             // Now, safely fetch the transaction with its outer relations
             const transaction = await manager.findOne(Transaction, {
                 where: { id: lockedTransaction.id },
-                relations: ['user', 'order', 'order.propertyVerification']
+                relations: ['order', 'order.user', 'order.propertyVerification']
             });
 
             if (!transaction) {
