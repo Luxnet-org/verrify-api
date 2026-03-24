@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { MyLoggerService } from '../logger/my-logger.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import { FileEntity } from '../../model/entity/file.entity';
 import { ConfigInterface } from '../../config-module/configuration';
 import { ConfigService } from '@nestjs/config';
@@ -77,8 +77,10 @@ export class FileService {
     url: string,
     entity: T,
     fileType: FileType,
+    manager?: EntityManager,
   ): Promise<FileEntity> {
-    let findFile: FileEntity | null = await this.fileRepository.findOne({
+    const repo = manager ? manager.getRepository(FileEntity) : this.fileRepository;
+    let findFile: FileEntity | null = await repo.findOne({
       where: {
         url,
       },
@@ -101,7 +103,7 @@ export class FileService {
       throw new NotFoundException('File not found');
     }
 
-    findFile = await this.updateFile(findFile, entity, fileType);
+    findFile = await this.updateFile(findFile, entity, fileType, manager);
 
     this.logger.log('File updated with url successfully', FileService.name);
     return findFile;
@@ -111,6 +113,7 @@ export class FileService {
     fileEntity: FileEntity,
     entity: T,
     fileType: FileType,
+    manager?: EntityManager,
   ): Promise<FileEntity> {
     if (fileEntity.fileType !== fileType) {
       throw new BadRequestException('File type do not match');
@@ -234,7 +237,8 @@ export class FileService {
       fileEntity.adminPropertyVerification = null;
     }
 
-    const updatedFile: FileEntity = await this.fileRepository.save(fileEntity);
+    const repo = manager ? manager.getRepository(FileEntity) : this.fileRepository;
+    const updatedFile: FileEntity = await repo.save(fileEntity);
 
     this.logger.log('File updated successfully', FileService.name);
     return updatedFile;

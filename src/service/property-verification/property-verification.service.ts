@@ -111,7 +111,7 @@ export class PropertyVerificationService {
 
             if (dto.verificationFiles && dto.verificationFiles.length > 0) {
                 await Promise.all(dto.verificationFiles.map(url =>
-                    this.fileService.updateWithUrl(url, savedVerification, FileType.VERIFICATION_DOCUMENT)
+                    this.fileService.updateWithUrl(url, savedVerification, FileType.VERIFICATION_DOCUMENT, manager)
                 ));
             }
 
@@ -205,7 +205,7 @@ export class PropertyVerificationService {
 
             if (dto.verificationFiles && dto.verificationFiles.length > 0) {
                 await Promise.all(dto.verificationFiles.map(url =>
-                    this.fileService.updateWithUrl(url, savedVerification, FileType.VERIFICATION_DOCUMENT)
+                    this.fileService.updateWithUrl(url, savedVerification, FileType.VERIFICATION_DOCUMENT, manager)
                 ));
             }
 
