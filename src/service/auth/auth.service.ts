@@ -286,7 +286,7 @@ export class AuthService {
     await this.actionVerificationService.verify(
       {
         verificationType: VerificationType.PASSWORDRESET,
-        tokenType: 'otp',
+        tokenType: 'token',
         user,
       },
       token,
@@ -315,7 +315,7 @@ export class AuthService {
     await this.actionVerificationService.delete({
       user,
       verificationType: VerificationType.PASSWORDRESET,
-      tokenType: 'otp',
+      tokenType: 'token',
     });
 
     if (password !== confirmPassword) {
