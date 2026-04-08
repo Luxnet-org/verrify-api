@@ -11,6 +11,7 @@ import { VerificationStageStatus } from '../enum/verification-stage-status.enum'
 import { Property } from './property.entity';
 import { User } from './user.entity';
 import { FileEntity } from './file.entity';
+import { VerificationPackage } from './verification-package.entity';
 
 @Entity()
 export class PropertyVerification extends Auditable {
@@ -48,4 +49,7 @@ export class PropertyVerification extends Auditable {
     @OneToMany(() => FileEntity, (file) => file.adminPropertyVerification)
     adminStageFiles: FileEntity[];
 
+    @ManyToOne(() => VerificationPackage, { nullable: true })
+    @JoinColumn()
+    verificationPackage: VerificationPackage;
 }

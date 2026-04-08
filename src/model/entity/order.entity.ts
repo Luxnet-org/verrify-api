@@ -10,6 +10,7 @@ import { OrderStatus } from '../enum/order-status.enum';
 import { PropertyVerification } from './property-verification.entity';
 import { User } from './user.entity';
 import { Transaction } from './transaction.entity';
+import { VerificationPackage } from './verification-package.entity';
 
 @Entity()
 export class Order extends Auditable {
@@ -30,6 +31,10 @@ export class Order extends Auditable {
     @ManyToOne(() => PropertyVerification)
     @JoinColumn()
     propertyVerification: PropertyVerification;
+
+    @ManyToOne(() => VerificationPackage, { nullable: true })
+    @JoinColumn()
+    verificationPackage: VerificationPackage;
 
     @OneToMany(() => Transaction, (transaction) => transaction.order)
     transactions: Transaction[];

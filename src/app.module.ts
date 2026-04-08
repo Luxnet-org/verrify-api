@@ -59,8 +59,11 @@ import { PaymentController } from './controller/payment.controller';
 import { AdminVerificationController } from './controller/admin-verification.controller';
 import { AdminPaymentController } from './controller/admin-payment.controller';
 import { AdminPropertyController } from './controller/admin-property.controller';
+import { AdminPackageController } from './controller/admin-package.controller';
 import { Order } from './model/entity/order.entity';
 import { Transaction } from './model/entity/transaction.entity';
+import { VerificationPackage } from './model/entity/verification-package.entity';
+import { VerificationPackageService } from './service/verification-package/verification-package.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
@@ -185,6 +188,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
       PropertyVerification,
       Order,
       Transaction,
+      VerificationPackage,
     ]),
     HttpModule,
     ScheduleModule.forRoot({}),
@@ -203,6 +207,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AdminVerificationController,
     AdminPaymentController,
     AdminPropertyController,
+    AdminPackageController,
   ],
   providers: [
     {
@@ -238,6 +243,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     PropertyVerificationService,
     OrderService,
     TransactionService,
+    VerificationPackageService,
   ],
   exports: [RbacService],
 })

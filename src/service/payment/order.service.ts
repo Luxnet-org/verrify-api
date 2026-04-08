@@ -4,15 +4,13 @@ import { Repository } from 'typeorm';
 import { Order } from '../../model/entity/order.entity';
 import { PropertyVerification } from '../../model/entity/property-verification.entity';
 import { User } from '../../model/entity/user.entity';
+import { VerificationPackage } from '../../model/entity/verification-package.entity';
 import { OrderStatus } from '../../model/enum/order-status.enum';
 import { PaginationAndSorting, PaginationQueryDto, PaginationAndSortingResult } from '../../utility/pagination-and-sorting';
 import { VerificationStageStatus } from '../../model/enum/verification-stage-status.enum';
 
 @Injectable()
 export class OrderService {
-    // Arbitrary flat fee for verification
-    private readonly VERIFICATION_FLAT_FEE = 50000;
-
     constructor(
         @InjectRepository(Order)
         private readonly orderRepository: Repository<Order>,
@@ -20,9 +18,11 @@ export class OrderService {
         private readonly propertyVerificationRepository: Repository<PropertyVerification>,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        @InjectRepository(VerificationPackage)
+        private readonly packageRepository: Repository<VerificationPackage>,
     ) { }
 
-    async createVerificationOrder(verificationId: string, userId: string): Promise<Order> {
+    async createVerificationOrder(verificationId: string, userId: string, packageId: string): Promise<Order> {
         const verification = await this.propertyVerificationRepository.findOne({
             where: { id: verificationId },
             relations: ['user']
@@ -42,6 +42,13 @@ export class OrderService {
             throw new NotFoundException('User not found');
         }
 
+        const verificationPackage = await this.packageRepository.findOne({
+            where: { id: packageId, isActive: true },
+        });
+        if (!verificationPackage) {
+            throw new NotFoundException('Verification package not found or inactive');
+        }
+
         // We can check if a pending order already exists to avoid duplicates
         const existingOrder = await this.orderRepository.findOne({
             where: {
@@ -55,16 +62,18 @@ export class OrderService {
         }
 
         const order = this.orderRepository.create({
-            amount: this.VERIFICATION_FLAT_FEE,
+            amount: verificationPackage.price,
             currency: 'NGN',
             status: OrderStatus.PENDING,
             user,
             propertyVerification: verification,
+            verificationPackage,
         });
 
         const savedOrder = await this.orderRepository.save(order);
 
-        // Update verification stage to PENDING_PAYMENT
+        // Update verification with selected package and stage
+        verification.verificationPackage = verificationPackage;
         verification.stage = VerificationStageStatus.PENDING_PAYMENT;
         if (!verification.stageHistory) verification.stageHistory = [];
         verification.stageHistory.push({ stage: VerificationStageStatus.PENDING_PAYMENT, completedAt: new Date() });

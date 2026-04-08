@@ -16,7 +16,7 @@ export interface ResendAttachment {
 @Injectable()
 export class ResendEmailService {
   private readonly logger = new MyLoggerService(ResendEmailService.name);
-  private readonly resend: Resend;
+  private readonly resend: Resend | null;
   private readonly sender: string;
 
   constructor(
@@ -30,8 +30,10 @@ export class ResendEmailService {
         'Resend API key not configured. Resend emails will fail.',
         ResendEmailService.name,
       );
+      this.resend = null;
+    } else {
+      this.resend = new Resend(apiKey);
     }
-    this.resend = new Resend(apiKey || '');
   }
 
   async sendMail(
@@ -42,6 +44,10 @@ export class ResendEmailService {
     fromName?: string,
     fromEmail?: string,
   ): Promise<void> {
+    if (!this.resend) {
+      throw new Error('Resend API key is not configured');
+    }
+
     const toArray = Array.isArray(to) ? to : [to];
 
     const senderName = fromName || 'Verrify';

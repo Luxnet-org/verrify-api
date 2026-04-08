@@ -26,6 +26,7 @@ import { TransactionService } from '../service/payment/transaction.service';
 import { ApiResponse } from '../utility/api-response';
 import { PaginationAndSortingResult, PaginationQueryDto } from '../utility/pagination-and-sorting';
 import { Public } from 'src/common/decorator/public.decorator';
+import { InitializePaymentRequestDto } from '../model/request/initialize-payment-request.dto';
 
 @ApiTags('Payment API')
 @Controller('payment')
@@ -44,11 +45,12 @@ export class PaymentController {
     @HttpCode(HttpStatus.OK)
     async initializePayment(
         @Param('verificationId') verificationId: string,
+        @Body() body: InitializePaymentRequestDto,
         @Req() request: Request,
     ): Promise<ApiResponse<any>> {
         const user: UserInfo = request.user!;
-        // 1. Create flat fee order
-        const order = await this.orderService.createVerificationOrder(verificationId, user.userId);
+        // 1. Create order with selected package
+        const order = await this.orderService.createVerificationOrder(verificationId, user.userId, body.packageId);
         // 2. Initialize paystack and create Transaction
         const paystackResult = await this.transactionService.initializeTransaction(order.id);
 
