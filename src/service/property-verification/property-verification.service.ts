@@ -117,7 +117,7 @@ export class PropertyVerificationService {
 
             const completeVerification = await manager.findOne(PropertyVerification, {
                 where: { id: savedVerification.id },
-                relations: ['property', 'property.company', 'property.location', 'user', 'verificationFiles', 'adminStageFiles']
+                relations: ['property', 'property.company', 'property.location', 'user', 'verificationFiles', 'adminStageFiles', 'verificationPackage']
             });
 
             return this.convertToDto(completeVerification!);
@@ -211,7 +211,7 @@ export class PropertyVerificationService {
 
             const completeVerification = await manager.findOne(PropertyVerification, {
                 where: { id: savedVerification.id },
-                relations: ['property', 'property.company', 'property.location', 'user', 'verificationFiles', 'adminStageFiles']
+                relations: ['property', 'property.company', 'property.location', 'user', 'verificationFiles', 'adminStageFiles', 'verificationPackage']
             });
 
             return this.convertToDto(completeVerification!);
@@ -249,7 +249,7 @@ export class PropertyVerificationService {
             queryDto,
             { user: { id: userId } } as any,
             {},
-            ['property', 'property.location', 'verificationFiles', 'adminStageFiles']
+            ['property', 'property.location', 'verificationFiles', 'adminStageFiles', 'verificationPackage']
         );
 
         const [items, total] = await this.propertyVerificationRepository.findAndCount(findOptions);
@@ -271,7 +271,7 @@ export class PropertyVerificationService {
 
         const verification = await this.propertyVerificationRepository.findOne({
             where: { id: verificationId },
-            relations: ['property', 'user', 'reviewUser']
+            relations: ['property', 'user', 'reviewUser', 'verificationPackage']
         });
 
         if (!verification) throw new NotFoundException('Verification request not found');
@@ -296,7 +296,7 @@ export class PropertyVerificationService {
     async assignVerdict(verificationId: string, adminUserId: string, dto: PropertyVerificationVerdictDto): Promise<PropertyVerificationDto> {
         const verification = await this.propertyVerificationRepository.findOne({
             where: { id: verificationId },
-            relations: ['property', 'user', 'reviewUser']
+            relations: ['property', 'user', 'reviewUser', 'verificationPackage']
         });
         if (!verification) throw new NotFoundException('Verification request not found');
 
@@ -353,7 +353,7 @@ export class PropertyVerificationService {
     async adminAdvanceStage(verificationId: string, adminUserId: string, files?: string[], comments?: string): Promise<PropertyVerificationDto> {
         const verification = await this.propertyVerificationRepository.findOne({
             where: { id: verificationId },
-            relations: ['property', 'user', 'reviewUser']
+            relations: ['property', 'user', 'reviewUser', 'verificationPackage']
         });
         if (!verification) throw new NotFoundException('Verification request not found');
 
@@ -436,6 +436,7 @@ export class PropertyVerificationService {
             .leftJoinAndSelect('pv.user', 'user')
             .leftJoinAndSelect('pv.verificationFiles', 'verificationFiles')
             .leftJoinAndSelect('pv.adminStageFiles', 'adminStageFiles')
+            .leftJoinAndSelect('pv.verificationPackage', 'verificationPackage')
             .where(where);
 
         if (search) {
@@ -467,7 +468,7 @@ export class PropertyVerificationService {
     private async getVerificationOrThrow(verificationId: string, userId: string): Promise<PropertyVerification> {
         const verification = await this.propertyVerificationRepository.findOne({
             where: { id: verificationId },
-            relations: ['property', 'property.company', 'property.location', 'user', 'reviewUser', 'verificationFiles', 'adminStageFiles']
+            relations: ['property', 'property.company', 'property.location', 'user', 'reviewUser', 'verificationFiles', 'adminStageFiles', 'verificationPackage']
         });
 
         if (!verification) {
@@ -503,6 +504,16 @@ export class PropertyVerificationService {
             user: verification.user ? this.userService.convertToDto(verification.user) : null,
             reviewUser: verification.reviewUser ? this.userService.convertToDto(verification.reviewUser) : null,
             stageHistory: (verification.stageHistory || []) as any,
+            verificationPackage: verification.verificationPackage ? {
+                id: verification.verificationPackage.id,
+                createdAt: verification.verificationPackage.createdAt,
+                updatedAt: verification.verificationPackage.updatedAt,
+                name: verification.verificationPackage.name,
+                description: verification.verificationPackage.description,
+                price: verification.verificationPackage.price,
+                isActive: verification.verificationPackage.isActive,
+                sortOrder: verification.verificationPackage.sortOrder,
+            } : null,
         };
     }
 }

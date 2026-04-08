@@ -4,6 +4,7 @@ import { VerificationStageStatus } from '../enum/verification-stage-status.enum'
 import { PropertyDto } from './property.dto';
 import { UserDto } from './user.dto';
 import { StageHistoryEntry } from './stage-history-entry.dto';
+import { VerificationPackageDto } from './verification-package.dto';
 
 export class PropertyVerificationDto extends DateDto {
     @ApiProperty()
@@ -35,4 +36,7 @@ export class PropertyVerificationDto extends DateDto {
 
     @ApiProperty({ type: [StageHistoryEntry], description: 'Ordered array of stage transitions with timestamps' })
     stageHistory: StageHistoryEntry[];
+
+    @ApiPropertyOptional({ type: () => VerificationPackageDto })
+    verificationPackage: VerificationPackageDto | null;
 }
