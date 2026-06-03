@@ -8,7 +8,8 @@ export const corsOptions = {
     'https://verrifyproduct-kpvx.vercel.app',
     'https://verrifyproduct-aysx.vercel.app',
     'https://www.verrify.io',
-    'https://verrifyproduct-vhpq.vercel.app'
+    'https://verrifyproduct-vhpq.vercel.app',
+    'https://app.verrify.io',
   ],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
