@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { User } from './user.entity';
 import { Company } from './company.entity';
@@ -28,6 +28,7 @@ export class LocationEntity extends Auditable {
     srid: 4326,
     nullable: true,
   })
+  @Index('IDX_location_polygon', { spatial: true })
   locationPolygon: Polygon;
 
   @OneToOne(() => User, (user) => user.address)
