@@ -6,10 +6,13 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { Polygon } from 'geojson';
 import { PropertyType } from '../enum/property-type.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { OtherDocumentRequestDto } from './create-property-request.dto';
 
 export class UpdatePropertyRequestDto {
   @IsString()
@@ -79,6 +82,14 @@ export class UpdatePropertyRequestDto {
   @ApiPropertyOptional()
   isSubmitted: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  @ApiPropertyOptional({
+    description:
+      'Controls public visibility. Can only be true after the property has an approved verification baseline.',
+  })
+  isPublic?: boolean;
+
   @IsString()
   @IsNotEmpty()
   @IsOptional()
@@ -86,10 +97,26 @@ export class UpdatePropertyRequestDto {
   deedOfConveyance: string;
 
   @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OtherDocumentRequestDto)
+  @IsOptional()
+  @ApiPropertyOptional({
+    type: [OtherDocumentRequestDto],
+    description:
+      'Other property documents. Omitted leaves unchanged, empty array clears, provided array replaces.',
+  })
+  otherDocuments?: OtherDocumentRequestDto[];
+
+  @IsArray()
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   @ArrayNotEmpty()
   @IsOptional()
-  @ApiPropertyOptional()
-  users: string[];
+  @ApiPropertyOptional({
+    type: [String],
+    nullable: true,
+    description:
+      'Sub-property user emails. Omitted or null leaves assignments unchanged; a non-empty array replaces them after verification approval.',
+  })
+  users?: string[] | null;
 }

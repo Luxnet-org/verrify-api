@@ -11,7 +11,7 @@ export class CompanyDto extends DateDto {
   description: string;
 
   @ApiProperty()
-  verificationMessage: string;
+  verificationMessage: string | null;
 
   @ApiProperty()
   phoneNumber: string | null;

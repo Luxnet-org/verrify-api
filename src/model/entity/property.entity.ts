@@ -5,6 +5,7 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   OneToOne,
   Index,
 } from 'typeorm';
@@ -15,6 +16,7 @@ import { Company } from './company.entity';
 import { LocationEntity } from './location.entity';
 import { FileEntity } from './file.entity';
 import { User } from './user.entity';
+import { PropertyVerificationVersion } from './property-verification-version.entity';
 
 @Entity()
 export class Property extends Auditable {
@@ -22,11 +24,11 @@ export class Property extends Auditable {
   name: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  description: string | null;
 
   @Index()
   @Column({ type: 'varchar', nullable: true, unique: true })
-  pin: string;
+  pin: string | null;
 
   @Column({ type: 'boolean', default: false })
   isSubProperty: boolean;
@@ -41,47 +43,57 @@ export class Property extends Auditable {
   propertyVerificationStatus: PropertyVerificationStatus;
 
   @Column({ type: 'text', nullable: true })
-  verificationMessage: string;
+  verificationMessage: string | null;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn()
-  reviewUser: User;
+  reviewUser: User | null;
 
   @Column({ type: 'timestamp with time zone', nullable: true })
-  reviewedAt: Date;
+  reviewedAt: Date | null;
 
   @Column({ type: 'timestamp with time zone', nullable: true })
-  verifiedAt: Date;
+  verifiedAt: Date | null;
 
   @Column({ type: 'double precision', nullable: true })
-  area: number;
+  area: number | null;
 
   @ManyToOne(() => Company, { nullable: true })
   @JoinColumn()
   company: Company;
 
   @OneToOne(() => LocationEntity, (location) => location.property)
-  location: LocationEntity;
+  location: LocationEntity | null;
 
   @OneToOne(() => FileEntity, (file) => file.certificationOfOccupancy)
-  certificationOfOccupancy: FileEntity;
+  certificationOfOccupancy: FileEntity | null;
 
   @OneToOne(() => FileEntity, (file) => file.contractOfSale)
-  contractOfSale: FileEntity;
+  contractOfSale: FileEntity | null;
 
   @OneToOne(() => FileEntity, (file) => file.surveyPlan)
-  surveyPlan: FileEntity;
+  surveyPlan: FileEntity | null;
 
   @OneToOne(() => FileEntity, (file) => file.deedOfConveyance)
-  deedOfConveyance: FileEntity;
+  deedOfConveyance: FileEntity | null;
+
+  @OneToMany(() => FileEntity, (file) => file.otherDocumentProperty)
+  otherDocuments: FileEntity[];
 
   // Optional
   @OneToOne(() => FileEntity, (file) => file.letterOfIntent)
-  letterOfIntent: FileEntity;
+  letterOfIntent: FileEntity | null;
+
+  @ManyToOne(() => PropertyVerificationVersion, { nullable: true })
+  @JoinColumn()
+  currentVerificationVersion: PropertyVerificationVersion | null;
+
+  @OneToMany(() => PropertyVerificationVersion, (version) => version.property)
+  verificationVersions: PropertyVerificationVersion[];
 
   @ManyToOne(() => Property)
   @JoinColumn()
-  parentProperty: Property;
+  parentProperty: Property | null;
 
   // For sub-property
   @ManyToMany(() => User)

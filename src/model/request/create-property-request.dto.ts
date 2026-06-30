@@ -3,11 +3,26 @@ import {
   IsBoolean,
   IsEnum,
   IsNotEmpty,
+  IsArray,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { Polygon } from 'geojson';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
+export class OtherDocumentRequestDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: 'Custom label for the document' })
+  label: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({ description: 'Uploaded file URL' })
+  url: string;
+}
 
 export class CreatePropertyRequestDto {
   @IsString()
@@ -81,6 +96,16 @@ export class CreatePropertyRequestDto {
     description: 'Reference to letter of intent document',
   })
   letterOfIntent: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OtherDocumentRequestDto)
+  @IsOptional()
+  @ApiPropertyOptional({
+    type: [OtherDocumentRequestDto],
+    description: 'Other property documents with custom labels',
+  })
+  otherDocuments?: OtherDocumentRequestDto[];
 
   @IsBoolean()
   @IsNotEmpty()

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MyLoggerService } from './service/logger/my-logger.service';
 import { MyConfigModule } from './config-module/config.module';
-import { RabbitMQService } from './service/rabbitmq/rabbitmq.service';
+import { VerrifyRabbitMQModule } from './service/rabbitmq/rabbitmq.module';
 import { EmailService } from './service/email/email.service';
 import { ResendEmailService } from './service/email/resend-email.service';
 import { ConfigModule } from '@nestjs/config';
@@ -38,8 +38,13 @@ import { Company } from './model/entity/company.entity';
 import { CompanyService } from './service/company/company.service';
 import { CompanyController } from './controller/company.controller';
 import { Property } from './model/entity/property.entity';
+import { PropertyVerificationVersion } from './model/entity/property-verification-version.entity';
+import { PropertyVerificationVersionOtherDocument } from './model/entity/property-verification-version-other-document.entity';
 import { PropertyController } from './controller/property.controller';
 import { PropertyService } from './service/property/property.service';
+import { PropertyHelperService } from './service/property/property-helper.service';
+import { PropertyGetService } from './service/property/property-get.service';
+import { PropertyVersionService } from './service/property/version/property-version.service';
 import { ArticleService } from './service/article/article.service';
 import { Article } from './model/entity/article.entity';
 import { ArticleController } from './controller/article.controller';
@@ -141,7 +146,7 @@ import { HealthController } from './controller/health.controller';
                     user: emailConfig.username,
                     pass: emailConfig.password,
                   },
-                  requireTLS: true,
+                  requireTLS: emailConfig.requireTLS,
                   logger: appConfig?.env === 'dev',
                   debug: appConfig?.env === 'dev',
                   tls: {
@@ -176,6 +181,7 @@ import { HealthController } from './controller/health.controller';
     ]),
 
     MyConfigModule,
+    VerrifyRabbitMQModule,
     TypeOrmModule.forFeature([
       User,
       LocationEntity,
@@ -184,6 +190,8 @@ import { HealthController } from './controller/health.controller';
       ActionVerification,
       Company,
       Property,
+      PropertyVerificationVersion,
+      PropertyVerificationVersionOtherDocument,
       Article,
       PortfolioItem,
       PropertyVerification,
@@ -223,7 +231,6 @@ import { HealthController } from './controller/health.controller';
     MyLoggerService,
     EmailService,
     ResendEmailService,
-    RabbitMQService,
     TokenService,
     CustomJwtService,
     AuthService,
@@ -237,6 +244,9 @@ import { HealthController } from './controller/health.controller';
     StayAlive,
     CompanyService,
     PropertyService,
+    PropertyHelperService,
+    PropertyGetService,
+    PropertyVersionService,
     ArticleService,
     ContactUsService,
     ContactEventService,
@@ -249,4 +259,4 @@ import { HealthController } from './controller/health.controller';
   ],
   exports: [RbacService],
 })
-export class AppModule { }
+export class AppModule {}

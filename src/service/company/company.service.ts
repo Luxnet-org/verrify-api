@@ -7,7 +7,7 @@ import {
 import { MyLoggerService } from '../logger/my-logger.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Company } from '../../model/entity/company.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CompanyDto } from '../../model/dto/company.dto';
 import { UserService } from '../user/user.service';
 import { User } from '../../model/entity/user.entity';
@@ -24,11 +24,10 @@ import {
 } from '../../utility/pagination-and-sorting';
 import { CompanyLookupResponse } from '../../model/response/company-lookup-response.dto';
 import { CompanySearchQueryDto } from '../../model/request/company-search-query.dto';
-import { UpdateVerificationStatusDto } from '../../model/request/update-verification-status.dto';
 import { EmailEvent } from '../email/email-event.service';
 import { EmailRequest } from '../../model/request/email-request.dto';
 import { EmailType } from '../../model/enum/email-type.enum';
-import { VerdictDto } from '../../model/request/verdict.dto';
+import { VerdictDto, VerdictType } from '../../model/request/verdict.dto';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from '../../config-module/configuration';
 
@@ -43,11 +42,10 @@ export class CompanyService {
     private readonly companyRepository: Repository<Company>,
     private readonly userService: UserService,
     private readonly fileService: FileService,
-    @InjectRepository(LocationEntity)
-    private readonly locationRepository: Repository<LocationEntity>,
     private readonly emailEvent: EmailEvent,
     private readonly configService: ConfigService<ConfigInterface>,
-  ) { }
+    private readonly dataSource: DataSource,
+  ) {}
 
   async findAll(
     searchDto: CompanySearchQueryDto,
@@ -98,7 +96,7 @@ export class CompanyService {
     return this.convertToDto(company);
   }
 
-  async findOne(companyId: string, userId: string): Promise<CompanyDto> {
+  async findOne(companyId: string): Promise<CompanyDto> {
     const company: Company = await this.findById(companyId, [
       'proofOfAddress',
       'profileImage',
@@ -153,72 +151,91 @@ export class CompanyService {
     userId: string,
     companyDto: CompanyProfileRequestDto,
   ): Promise<CompanyDto> {
-    const user: User | null = await this.userService.findById(userId);
+    const result = await this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(User);
+      const companyRepository = manager.getRepository(Company);
+      const locationRepository = manager.getRepository(LocationEntity);
 
-    const findCompany: Company | null = await this.companyRepository.findOne({
-      where: {
-        user: { id: userId },
-      },
-    });
-
-    if (findCompany) {
-      throw new BadRequestException('Company profile already exist');
-    }
-
-    if (companyDto.proofOfAddressType && !companyDto.proofOfAddress) {
-      throw new BadRequestException(
-        'Provide proofOfAddress file when proofOfAddressType is specified',
-      );
-    }
-
-    if (companyDto.address && (!companyDto.city || !companyDto.state)) {
-      throw new BadRequestException(
-        'To add address: city and state must be provided',
-      );
-    }
-
-    let company: Company = this.companyRepository.create({
-      name: companyDto.name,
-      description: companyDto.description,
-      phoneNumber: companyDto.phoneNumber,
-      companyVerificationStatus: CompanyVerificationStatus.NOT_VERIFIED,
-      proofOfAddressType: companyDto.proofOfAddressType,
-      user,
-    });
-    company = await this.companyRepository.save(company);
-
-    if (companyDto.address) {
-      const location: LocationEntity = this.locationRepository.create({
-        address: companyDto.address,
-        state: companyDto.state,
-        city: companyDto.city,
-        company,
+      const user: User | null = await userRepository.findOne({
+        where: { id: userId },
       });
-      await this.locationRepository.save(location);
-      company.address = location;
-    }
 
-    if (companyDto.proofOfAddress) {
-      company.proofOfAddress = await this.fileService.updateWithUrl(
-        companyDto.proofOfAddress,
-        company,
-        FileType.PROOF_OF_ADDRESS,
-      );
-    }
+      if (!user) {
+        throw new NotFoundException(`User with id ${userId} not found`);
+      }
 
-    if (companyDto.profileImage) {
-      company.profileImage = await this.fileService.updateWithUrl(
-        companyDto.profileImage,
-        company,
-        FileType.COMPANY_PROFILE_PICTURE,
-      );
-    }
+      const findCompany: Company | null = await companyRepository.findOne({
+        where: {
+          user: { id: userId },
+        },
+      });
+
+      if (findCompany) {
+        throw new BadRequestException('Company profile already exist');
+      }
+
+      if (companyDto.proofOfAddressType && !companyDto.proofOfAddress) {
+        throw new BadRequestException(
+          'Provide proofOfAddress file when proofOfAddressType is specified',
+        );
+      }
+
+      if (companyDto.address && (!companyDto.city || !companyDto.state)) {
+        throw new BadRequestException(
+          'To add address: city and state must be provided',
+        );
+      }
+
+      let company: Company = companyRepository.create({
+        name: companyDto.name,
+        description: companyDto.description,
+        phoneNumber: companyDto.phoneNumber,
+        companyVerificationStatus: CompanyVerificationStatus.NOT_VERIFIED,
+        proofOfAddressType: companyDto.proofOfAddressType,
+        user,
+      });
+      company = await companyRepository.save(company);
+
+      if (companyDto.address) {
+        const location: LocationEntity = locationRepository.create({
+          address: companyDto.address,
+          state: companyDto.state,
+          city: companyDto.city,
+          company,
+        });
+        await locationRepository.save(location);
+        company.address = location;
+      }
+
+      if (companyDto.proofOfAddress) {
+        company.proofOfAddress = await this.fileService.updateWithUrl(
+          companyDto.proofOfAddress,
+          company,
+          FileType.PROOF_OF_ADDRESS,
+          manager,
+        );
+      }
+
+      if (companyDto.profileImage) {
+        company.profileImage = await this.fileService.updateWithUrl(
+          companyDto.profileImage,
+          company,
+          FileType.COMPANY_PROFILE_PICTURE,
+          manager,
+        );
+      }
+
+      return {
+        dto: this.convertToDto(company),
+        userId: user.id,
+      };
+    });
 
     this.logger.log(
-      `Company profile created for user ${user.id}`,
+      `Company profile created for user ${result.userId}`,
       CompanyService.name,
     );
-    return this.convertToDto(company);
+    return result.dto;
   }
 
   async update(
@@ -238,106 +255,133 @@ export class CompanyService {
       description,
     }: UpdateCompanyProfileDto = companyDto;
 
-    let company: Company = await this.findById(companyId, [
-      'proofOfAddress',
-      'profileImage',
-      'address',
-      'user',
-    ]);
+    const result = await this.dataSource.transaction(async (manager) => {
+      const userRepository = manager.getRepository(User);
+      const companyRepository = manager.getRepository(Company);
 
-    const user: User = await this.userService.findById(userId);
+      let company: Company | null = await companyRepository.findOne({
+        where: { id: companyId },
+        relations: ['proofOfAddress', 'profileImage', 'address', 'user'],
+      });
 
-    if (company.user.id !== user.id && user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN) {
-      throw new UnauthorizedException(
-        'Access denied to modify company profile',
-      );
-    }
-
-    if (description) {
-      company.description = description;
-    }
-
-    if (profileImage) {
-      if (company.profileImage) {
-        await this.fileService.updateFile(
-          company.profileImage,
-          null,
-          FileType.COMPANY_PROFILE_PICTURE,
-        );
+      if (!company) {
+        throw new NotFoundException('Company profile not found');
       }
-      user.profileImage = await this.fileService.updateWithUrl(
-        profileImage,
-        company,
-        FileType.COMPANY_PROFILE_PICTURE,
-      );
-    }
 
-    if (proofOfAddress || address || name) {
+      const user: User | null = await userRepository.findOne({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with id ${userId} not found`);
+      }
+
       if (
-        company.user.id === user.id &&
-        user.role !== UserRole.ADMIN && user.role !== UserRole.SUPER_ADMIN &&
-        (company.companyVerificationStatus ===
-          CompanyVerificationStatus.PENDING ||
-          company.companyVerificationStatus ===
-          CompanyVerificationStatus.VERIFIED)
+        company.user.id !== user.id &&
+        user.role !== UserRole.ADMIN &&
+        user.role !== UserRole.SUPER_ADMIN
       ) {
-        throw new BadRequestException(
-          'Cannot modify company profile during review',
+        throw new UnauthorizedException(
+          'Access denied to modify company profile',
         );
       }
 
-      if (name) {
-        company.name = name;
+      if (description) {
+        company.description = description;
       }
 
-      if (phoneNumber) {
-        company.phoneNumber = phoneNumber;
-      }
-
-      if (address) {
-        if (!city || !state) {
-          throw new BadRequestException(
-            'To modify address: city and state must be provided',
-          );
-        }
-
-        company.address.address = address;
-        company.address.city = city;
-        company.address.state = state;
-      }
-
-      if (proofOfAddress) {
-        if (!proofOfAddressType) {
-          throw new BadRequestException(
-            'To modify proofOfAddress file: set proofOfAddressType',
-          );
-        }
-
-        company.proofOfAddressType = proofOfAddressType;
-
-        if (company.proofOfAddress) {
+      if (profileImage) {
+        if (company.profileImage) {
           await this.fileService.updateFile(
-            company.proofOfAddress,
+            company.profileImage,
             null,
-            FileType.PROOF_OF_ADDRESS,
+            FileType.COMPANY_PROFILE_PICTURE,
+            manager,
+          );
+        }
+        company.profileImage = await this.fileService.updateWithUrl(
+          profileImage,
+          company,
+          FileType.COMPANY_PROFILE_PICTURE,
+          manager,
+        );
+      }
+
+      if (proofOfAddress || address || name) {
+        if (
+          company.user.id === user.id &&
+          user.role !== UserRole.ADMIN &&
+          user.role !== UserRole.SUPER_ADMIN &&
+          (company.companyVerificationStatus ===
+            CompanyVerificationStatus.PENDING ||
+            company.companyVerificationStatus ===
+              CompanyVerificationStatus.VERIFIED)
+        ) {
+          throw new BadRequestException(
+            'Cannot modify company profile during review',
           );
         }
 
-        company.proofOfAddress = await this.fileService.updateWithUrl(
-          proofOfAddress,
-          company,
-          FileType.PROOF_OF_ADDRESS,
-        );
-      }
-    }
+        if (name) {
+          company.name = name;
+        }
 
-    company = await this.companyRepository.save(company);
+        if (phoneNumber) {
+          company.phoneNumber = phoneNumber;
+        }
+
+        if (address) {
+          if (!city || !state) {
+            throw new BadRequestException(
+              'To modify address: city and state must be provided',
+            );
+          }
+
+          company.address.address = address;
+          company.address.city = city;
+          company.address.state = state;
+        }
+
+        if (proofOfAddress) {
+          if (!proofOfAddressType) {
+            throw new BadRequestException(
+              'To modify proofOfAddress file: set proofOfAddressType',
+            );
+          }
+
+          company.proofOfAddressType = proofOfAddressType;
+
+          if (company.proofOfAddress) {
+            await this.fileService.updateFile(
+              company.proofOfAddress,
+              null,
+              FileType.PROOF_OF_ADDRESS,
+              manager,
+            );
+          }
+
+          company.proofOfAddress = await this.fileService.updateWithUrl(
+            proofOfAddress,
+            company,
+            FileType.PROOF_OF_ADDRESS,
+            manager,
+          );
+        }
+      }
+
+      company = await companyRepository.save(company);
+
+      return {
+        companyId: company.id,
+        dto: this.convertToDto(company),
+      };
+    });
 
     this.logger.log(
-      `Company profile ${company.id} was modified`,
+      `Company profile ${result.companyId} was modified`,
       CompanyService.name,
     );
-    return this.convertToDto(company);
+    return result.dto;
   }
 
   async submitForVerification(
@@ -354,9 +398,8 @@ export class CompanyService {
 
     if (
       company.companyVerificationStatus !==
-      CompanyVerificationStatus.NOT_VERIFIED &&
-      company.companyVerificationStatus !==
-      CompanyVerificationStatus.REJECTED
+        CompanyVerificationStatus.NOT_VERIFIED &&
+      company.companyVerificationStatus !== CompanyVerificationStatus.REJECTED
     ) {
       throw new BadRequestException(
         `Cannot submit company with status ${company.companyVerificationStatus}. Only NOT_VERIFIED or REJECTED companies can be submitted.`,
@@ -364,10 +407,10 @@ export class CompanyService {
     }
 
     company.companyVerificationStatus = CompanyVerificationStatus.PENDING;
-    company.reviewUser = null as any;
-    company.reviewedAt = null as any;
-    company.verifiedAt = null as any;
-    company.verificationMessage = null as any;
+    company.reviewUser = null;
+    company.reviewedAt = null;
+    company.verifiedAt = null;
+    company.verificationMessage = null;
 
     await this.companyRepository.save(company);
 
@@ -388,10 +431,7 @@ export class CompanyService {
     return `Company ${company.id} has been submitted for verification`;
   }
 
-  async assignReview(
-    companyId: string,
-    adminUserId: string,
-  ): Promise<string> {
+  async assignReview(companyId: string, adminUserId: string): Promise<string> {
     const admin: User = await this.userService.findById(adminUserId);
 
     if (admin.role !== UserRole.ADMIN && admin.role !== UserRole.SUPER_ADMIN) {
@@ -401,8 +441,7 @@ export class CompanyService {
     const company = await this.findById(companyId, ['user']);
 
     if (
-      company.companyVerificationStatus !==
-      CompanyVerificationStatus.PENDING
+      company.companyVerificationStatus !== CompanyVerificationStatus.PENDING
     ) {
       throw new BadRequestException(
         `Cannot assign review for company with status ${company.companyVerificationStatus}. Only PENDING companies can be assigned for review.`,
@@ -429,8 +468,7 @@ export class CompanyService {
     const company = await this.findById(companyId, ['user', 'reviewUser']);
 
     if (
-      company.companyVerificationStatus !==
-      CompanyVerificationStatus.IN_REVIEW
+      company.companyVerificationStatus !== CompanyVerificationStatus.IN_REVIEW
     ) {
       throw new BadRequestException(
         `Cannot give verdict for company with status ${company.companyVerificationStatus}. Only IN_REVIEW companies can receive a verdict.`,
@@ -444,7 +482,7 @@ export class CompanyService {
     }
 
     const newStatus =
-      verdictDto.verdict === 'VERIFIED'
+      verdictDto.verdict === VerdictType.VERIFIED
         ? CompanyVerificationStatus.VERIFIED
         : CompanyVerificationStatus.REJECTED;
 
@@ -455,7 +493,9 @@ export class CompanyService {
     await this.companyRepository.save(company);
 
     // Send verdict email
-    const frontendUrl = this.configService.get('app.frontendHost', { infer: true }) || 'https://verrify.net';
+    const frontendUrl =
+      this.configService.get('app.frontendHost', { infer: true }) ||
+      'https://verrify.net';
     const emailRequest: EmailRequest = {
       type:
         newStatus === CompanyVerificationStatus.VERIFIED

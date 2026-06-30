@@ -6,10 +6,13 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Polygon } from 'geojson';
 import { PropertyType } from '../enum/property-type.enum';
+import { Type } from 'class-transformer';
+import { OtherDocumentRequestDto } from './create-property-request.dto';
 
 export class CreateSubPropertyRequestDto {
   @IsString()
@@ -70,6 +73,16 @@ export class CreateSubPropertyRequestDto {
   @IsOptional()
   @ApiPropertyOptional({ description: 'Reference to survey plan document' })
   surveyPlan: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OtherDocumentRequestDto)
+  @IsOptional()
+  @ApiPropertyOptional({
+    type: [OtherDocumentRequestDto],
+    description: 'Other property documents with custom labels',
+  })
+  otherDocuments?: OtherDocumentRequestDto[];
 
   @IsBoolean()
   @IsNotEmpty()

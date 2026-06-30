@@ -1,10 +1,15 @@
-import { IsEnum, IsNumber, IsOptional } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsUUID } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { PropertyType } from '../enum/property-type.enum';
 import { PropertyVerificationStatus } from '../enum/property-verification-status.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LocationQueryDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  companyId?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()
