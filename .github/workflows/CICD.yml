@@ -75,7 +75,11 @@ jobs:
         run: mkdir -p /home/verrify/logs
 
       - name: Create .env file
+        env:
+          GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
         run: |
+          google_private_key="${GOOGLE_PRIVATE_KEY//$'\n'/\\n}"
+
           cat > .env <<'EOF'
           DOCKERHUB_IMAGE=${{ vars.DOCKERHUB_IMAGE }}
           GITHUB_SHA=${{ github.sha }}
@@ -120,13 +124,13 @@ jobs:
           CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
 
           GOOGLE_CLIENT_EMAIL=${{ secrets.GOOGLE_CLIENT_EMAIL }}
-          GOOGLE_PRIVATE_KEY=${{ secrets.GOOGLE_PRIVATE_KEY }}
           GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }}
           GOOGLE_SHEET_NAME=${{ secrets.GOOGLE_SHEET_NAME }}
 
           PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
           PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
           EOF
+          printf '%s\n' "GOOGLE_PRIVATE_KEY=${google_private_key}" >> .env
           chmod 600 .env
 
       - name: Pull application image
