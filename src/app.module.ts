@@ -65,6 +65,7 @@ import { Transaction } from './model/entity/transaction.entity';
 import { VerificationPackage } from './model/entity/verification-package.entity';
 import { VerificationPackageService } from './service/verification-package/verification-package.service';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { HealthController } from './controller/health.controller';
 
 @Module({
   imports: [
@@ -93,7 +94,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
           autoLoadEntities: true,
           logging: appConfig.env === 'dev',
           timezone: 'Z',
-          ssl: appConfig.env === 'prod' ? { rejectUnauthorized: false } : false,
+          ssl: databaseConfig.ssl ? { rejectUnauthorized: false } : false,
         };
       },
     }),
@@ -208,6 +209,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AdminPaymentController,
     AdminPropertyController,
     AdminPackageController,
+    HealthController,
   ],
   providers: [
     {

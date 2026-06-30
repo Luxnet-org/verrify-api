@@ -14,6 +14,7 @@ export interface ConfigInterface {
     type: string;
     host: string;
     port: number;
+    ssl: boolean;
   };
   email: {
     provider: 'resend' | 'smtp';
@@ -67,6 +68,7 @@ export const validationSchema = Joi.object({
   DB_TYPE: Joi.string().required(),
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().port().required(),
+  DB_SSL: Joi.boolean().truthy('true').falsy('false').default(false),
 
   EMAIL_PROVIDER: Joi.string().valid('resend', 'smtp').required(),
   EMAIL_RESEND_API_KEY: Joi.string().when('EMAIL_PROVIDER', {
@@ -120,6 +122,14 @@ export const validationSchema = Joi.object({
   PAYSTACK_SECRET_KEY: Joi.string().required(),
 });
 
+const getBooleanEnv = (value: string | undefined): boolean | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return value.toLowerCase() === 'true';
+};
+
 export const configuration = (): ConfigInterface => ({
   app: {
     env: (process.env.APP_PROFILE || 'dev') as ConfigInterface['app']['env'],
@@ -133,6 +143,7 @@ export const configuration = (): ConfigInterface => ({
     type: process.env.DB_TYPE!,
     host: process.env.DB_HOST!,
     port: +process.env.DB_PORT!,
+    ssl: getBooleanEnv(process.env.DB_SSL) ?? false,
   },
   email: {
     resendAPIKey: process.env.EMAIL_RESEND_API_KEY!,
