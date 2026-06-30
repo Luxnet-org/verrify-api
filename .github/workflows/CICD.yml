@@ -1,0 +1,154 @@
+name: CI_CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  IMAGE: ${{ vars.DOCKERHUB_IMAGE }}
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build check
+        run: npm run build
+
+  build-push:
+    needs: build-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-push
+    runs-on: [VERRIFY]
+    concurrency:
+      group: verrify-production
+      cancel-in-progress: false
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Ensure host directories
+        run: mkdir -p /home/verrify/logs
+
+      - name: Create .env file
+        run: |
+          cat > .env <<'EOF'
+          DOCKERHUB_IMAGE=${{ vars.DOCKERHUB_IMAGE }}
+          GITHUB_SHA=${{ github.sha }}
+
+          PORT=3000
+          APP_PROFILE=${{ vars.APP_PROFILE }}
+          NODE_ENV=${{ vars.NODE_ENV }}
+          FRONTEND_HOST=${{ vars.FRONTEND_HOST }}
+          ORIGIN=${{ vars.ORIGIN }}
+
+          DB_HOST=postgres
+          DB_PORT=${{ vars.DB_PORT }}
+          DB_USERNAME=${{ secrets.DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ vars.DB_NAME }}
+          DB_TYPE=${{ vars.DB_TYPE }}
+          DB_SSL=${{ vars.DB_SSL }}
+
+          RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }}
+          RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+          RABBITMQ_URI=amqp://${{ secrets.RABBITMQ_USERNAME }}:${{ secrets.RABBITMQ_PASSWORD }}@rabbitmq:5672
+
+          EMAIL_PROVIDER=${{ vars.EMAIL_PROVIDER }}
+          EMAIL_RESEND_API_KEY=${{ secrets.EMAIL_RESEND_API_KEY }}
+          EMAIL_USERNAME=${{ secrets.EMAIL_USERNAME }}
+          EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_HOST=${{ vars.EMAIL_HOST }}
+          EMAIL_PORT=${{ vars.EMAIL_PORT }}
+          EMAIL_REQUIRE_TLS=${{ vars.EMAIL_REQUIRE_TLS || 'true' }}
+          EMAIL_SENDER=${{ vars.EMAIL_SENDER }}
+          ADMIN_EMAIL=${{ vars.ADMIN_EMAIL }}
+
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_EXPIRE=${{ vars.JWT_EXPIRE }}
+          REFRESH_EXPIRE=${{ vars.REFRESH_EXPIRE }}
+          VERIFICATION_EXPIRE=${{ vars.VERIFICATION_EXPIRE }}
+
+          LOG_FILE_PATH=${{ vars.LOG_FILE_PATH }}
+
+          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+
+          GOOGLE_CLIENT_EMAIL=${{ secrets.GOOGLE_CLIENT_EMAIL }}
+          GOOGLE_PRIVATE_KEY=${{ secrets.GOOGLE_PRIVATE_KEY }}
+          GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_NAME=${{ secrets.GOOGLE_SHEET_NAME }}
+
+          PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
+          PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
+          EOF
+          chmod 600 .env
+
+      - name: Pull application image
+        run: docker pull "${{ vars.DOCKERHUB_IMAGE }}:${{ github.sha }}"
+
+      - name: Start platform dependencies
+        run: docker compose -f docker-compose.production.yaml --env-file .env up -d --wait postgres rabbitmq
+
+      - name: Run database migrations
+        run: |
+          docker run --rm \
+            --env-file .env \
+            --network verrify_net \
+            "${{ vars.DOCKERHUB_IMAGE }}:${{ github.sha }}" \
+            npm run typeorm:migration-run:prod
+
+      - name: Deploy application stack
+        run: docker compose -f docker-compose.production.yaml --env-file .env up -d
+
+      - name: Clean old Docker images
+        run: docker image prune -a -f --filter "until=24h"
+
+      - name: Clean up .env
+        if: always()
+        run: rm -f .env
