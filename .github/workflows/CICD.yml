@@ -77,8 +77,32 @@ jobs:
       - name: Create .env file
         env:
           GOOGLE_PRIVATE_KEY: ${{ secrets.GOOGLE_PRIVATE_KEY }}
+          RABBITMQ_USERNAME: ${{ secrets.RABBITMQ_USERNAME }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
         run: |
+          urlencode() {
+            local input="$1"
+            local encoded=""
+            local pos char escaped
+
+            for ((pos = 0; pos < ${#input}; pos++)); do
+              char="${input:$pos:1}"
+              case "$char" in
+                [a-zA-Z0-9.~_-])
+                  escaped="$char"
+                  ;;
+                *)
+                  printf -v escaped '%%%02X' "'$char"
+                  ;;
+              esac
+              encoded+="$escaped"
+            done
+
+            printf '%s' "$encoded"
+          }
+
           google_private_key="${GOOGLE_PRIVATE_KEY//$'\n'/\\n}"
+          rabbitmq_uri="amqp://$(urlencode "$RABBITMQ_USERNAME"):$(urlencode "$RABBITMQ_PASSWORD")@rabbitmq:5672"
 
           cat > .env <<'EOF'
           DOCKERHUB_IMAGE=${{ vars.DOCKERHUB_IMAGE }}
@@ -100,7 +124,6 @@ jobs:
 
           RABBITMQ_USERNAME=${{ secrets.RABBITMQ_USERNAME }}
           RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
-          RABBITMQ_URI=amqp://${{ secrets.RABBITMQ_USERNAME }}:${{ secrets.RABBITMQ_PASSWORD }}@rabbitmq:5672
 
           EMAIL_PROVIDER=${{ vars.EMAIL_PROVIDER }}
           EMAIL_RESEND_API_KEY=${{ secrets.EMAIL_RESEND_API_KEY }}
@@ -131,6 +154,7 @@ jobs:
           PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
           EOF
           printf '%s\n' "GOOGLE_PRIVATE_KEY=${google_private_key}" >> .env
+          printf '%s\n' "RABBITMQ_URI=${rabbitmq_uri}" >> .env
           chmod 600 .env
 
       - name: Pull application image

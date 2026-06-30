@@ -9,7 +9,7 @@ services:
       PORT: ${PORT:-3000}
       DB_HOST: postgres
       DB_PORT: '5432'
-      RABBITMQ_URI: amqp://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      RABBITMQ_URI: ${RABBITMQ_URI}
       LOG_FILE_PATH: /logs
     ports:
       - '127.0.0.1:3000:3000'
