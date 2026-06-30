@@ -1,10 +1,10 @@
 import {
-    Column,
-    Entity,
-    JoinColumn,
-    ManyToOne,
-    OneToMany,
-    Index,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  Index,
 } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { VerificationStageStatus } from '../enum/verification-stage-status.enum';
@@ -15,41 +15,45 @@ import { VerificationPackage } from './verification-package.entity';
 
 @Entity()
 export class PropertyVerification extends Auditable {
-    @Column({ type: 'enum', enum: VerificationStageStatus, default: VerificationStageStatus.INITIATED })
-    stage: VerificationStageStatus;
+  @Column({
+    type: 'enum',
+    enum: VerificationStageStatus,
+    default: VerificationStageStatus.INITIATED,
+  })
+  stage: VerificationStageStatus;
 
-    @Index({ unique: true, where: '"caseId" IS NOT NULL' })
-    @Column({ type: 'varchar', nullable: true })
-    caseId: string;
+  @Index({ unique: true, where: '"caseId" IS NOT NULL' })
+  @Column({ type: 'varchar', nullable: true })
+  caseId: string | null;
 
-    @ManyToOne(() => Property)
-    @JoinColumn()
-    property: Property;
+  @ManyToOne(() => Property)
+  @JoinColumn()
+  property: Property;
 
-    @ManyToOne(() => User)
-    @JoinColumn()
-    user: User;
+  @ManyToOne(() => User)
+  @JoinColumn()
+  user: User;
 
-    @Column({ type: 'simple-json', nullable: true })
-    adminComments: any;
+  @Column({ type: 'simple-json', nullable: true })
+  adminComments: string | null;
 
-    @ManyToOne(() => User, { nullable: true })
-    @JoinColumn()
-    reviewUser: User;
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn()
+  reviewUser: User | null;
 
-    @Column({ type: 'timestamp with time zone', nullable: true })
-    reviewedAt: Date;
+  @Column({ type: 'timestamp with time zone', nullable: true })
+  reviewedAt: Date | null;
 
-    @Column({ type: 'simple-json', default: '[]' })
-    stageHistory: { stage: string; completedAt: Date }[];
+  @Column({ type: 'simple-json', default: '[]' })
+  stageHistory: { stage: VerificationStageStatus; completedAt: Date }[];
 
-    @OneToMany(() => FileEntity, (file) => file.propertyVerification)
-    verificationFiles: FileEntity[];
+  @OneToMany(() => FileEntity, (file) => file.propertyVerification)
+  verificationFiles: FileEntity[];
 
-    @OneToMany(() => FileEntity, (file) => file.adminPropertyVerification)
-    adminStageFiles: FileEntity[];
+  @OneToMany(() => FileEntity, (file) => file.adminPropertyVerification)
+  adminStageFiles: FileEntity[];
 
-    @ManyToOne(() => VerificationPackage, { nullable: true })
-    @JoinColumn()
-    verificationPackage: VerificationPackage;
+  @ManyToOne(() => VerificationPackage, { nullable: true })
+  @JoinColumn()
+  verificationPackage: VerificationPackage | null;
 }

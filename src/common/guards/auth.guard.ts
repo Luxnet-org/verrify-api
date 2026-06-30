@@ -16,11 +16,9 @@ export interface UserInfo {
   role: UserRole;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: UserInfo;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: UserInfo;
   }
 }
 
@@ -34,6 +32,10 @@ export class AuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    if (context.getType() !== 'http') {
+      return true;
+    }
+
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -50,9 +52,11 @@ export class AuthGuard implements CanActivate {
     }
 
     const payload = this.jwtService.verifyJwtToken(bearerToken);
-    request['user'] = {
+    const role = this.getUserRole(payload.role);
+
+    request.user = {
       userId: payload.userId,
-      role: UserRole[payload.role],
+      role,
     };
 
     // if (!request.user) {
@@ -67,5 +71,13 @@ export class AuthGuard implements CanActivate {
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
+  }
+
+  private getUserRole(role: string): UserRole {
+    if (Object.values(UserRole).includes(role as UserRole)) {
+      return role as UserRole;
+    }
+
+    throw new UnauthorizedException('Invalid Token');
   }
 }

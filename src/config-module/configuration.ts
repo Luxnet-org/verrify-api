@@ -14,6 +14,7 @@ export interface ConfigInterface {
     type: string;
     host: string;
     port: number;
+    ssl: boolean;
   };
   email: {
     provider: 'resend' | 'smtp';
@@ -22,6 +23,7 @@ export interface ConfigInterface {
     password: string;
     host: string;
     port: number;
+    requireTLS: boolean;
     sender: string;
     adminEmail: string;
   };
@@ -67,6 +69,7 @@ export const validationSchema = Joi.object({
   DB_TYPE: Joi.string().required(),
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().port().required(),
+  DB_SSL: Joi.boolean().truthy('true').falsy('false').default(false),
 
   EMAIL_PROVIDER: Joi.string().valid('resend', 'smtp').required(),
   EMAIL_RESEND_API_KEY: Joi.string().when('EMAIL_PROVIDER', {
@@ -94,6 +97,7 @@ export const validationSchema = Joi.object({
     then: Joi.required(),
     otherwise: Joi.optional(),
   }),
+  EMAIL_REQUIRE_TLS: Joi.boolean().truthy('true').falsy('false').optional(),
   EMAIL_SENDER: Joi.string().required(),
   ADMIN_EMAIL: Joi.string().required(),
 
@@ -120,6 +124,14 @@ export const validationSchema = Joi.object({
   PAYSTACK_SECRET_KEY: Joi.string().required(),
 });
 
+const getBooleanEnv = (value: string | undefined): boolean | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return value.toLowerCase() === 'true';
+};
+
 export const configuration = (): ConfigInterface => ({
   app: {
     env: (process.env.APP_PROFILE || 'dev') as ConfigInterface['app']['env'],
@@ -133,14 +145,19 @@ export const configuration = (): ConfigInterface => ({
     type: process.env.DB_TYPE!,
     host: process.env.DB_HOST!,
     port: +process.env.DB_PORT!,
+    ssl: getBooleanEnv(process.env.DB_SSL) ?? false,
   },
   email: {
     resendAPIKey: process.env.EMAIL_RESEND_API_KEY!,
-    provider: (process.env.EMAIL_PROVIDER || 'smtp') as ConfigInterface['email']['provider'],
+    provider: (process.env.EMAIL_PROVIDER ||
+      'smtp') as ConfigInterface['email']['provider'],
     username: process.env.EMAIL_USERNAME!,
     password: process.env.EMAIL_PASSWORD!,
     host: process.env.EMAIL_HOST!,
     port: +process.env.EMAIL_PORT!,
+    requireTLS:
+      getBooleanEnv(process.env.EMAIL_REQUIRE_TLS) ??
+      process.env.APP_PROFILE === 'prod',
     sender: process.env.EMAIL_SENDER!,
     adminEmail: process.env.ADMIN_EMAIL!,
   },

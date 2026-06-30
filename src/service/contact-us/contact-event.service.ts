@@ -1,43 +1,57 @@
+import {
+  AmqpConnection,
+  Nack,
+  RabbitSubscribe,
+} from '@golevelup/nestjs-rabbitmq';
 import { Injectable } from '@nestjs/common';
-import { RabbitMQService } from '../rabbitmq/rabbitmq.service';
-import { ContactUsService } from './contact-us.service';
+import { ConsumeMessage } from 'amqplib';
 import { ContactMeEventRequest } from '../../model/request/contact-me-event-request';
 import { ContactMeEventType } from '../../model/enum/contact-me-event-type.enum';
 import { NewsletterService } from './newsletter.service';
+import {
+  CONTACT_QUEUE_GROUP,
+  RABBITMQ_EXCHANGES,
+} from '../rabbitmq/rabbitmq.constants';
+import { RabbitMQRetryService } from '../rabbitmq/rabbitmq-retry.service';
 
 @Injectable()
 export class ContactEventService {
-  private readonly contactQueue = 'verrifyConatct';
-  private readonly contactRoutingKey = 'verrifyContactRoutingKey';
-
   constructor(
-    private readonly rabbitService: RabbitMQService,
+    private readonly amqpConnection: AmqpConnection,
     private readonly newsletterService: NewsletterService,
+    private readonly retryService: RabbitMQRetryService,
   ) {}
 
-  async onModuleInit() {
-    await this.setupQueue();
-  }
-
-  private async setupQueue(): Promise<void> {
-    await this.rabbitService.addQueue({
-      name: this.contactQueue,
-      routingKey: this.contactRoutingKey,
-      handler: async (contactRequest: ContactMeEventRequest): Promise<void> => {
-        if (
-          contactRequest.eventType === ContactMeEventType.SUBSCRIBENEWSLETTER
-        ) {
-          await this.newsletterService.subscribe(
-            contactRequest.subscribeRequest!,
-          );
-        }
-      },
-    });
+  @RabbitSubscribe({
+    queue: CONTACT_QUEUE_GROUP.mainQueue,
+    createQueueIfNotExists: false,
+  })
+  async handleContactRequest(
+    contactRequest: ContactMeEventRequest,
+    message: ConsumeMessage,
+  ): Promise<Nack | void> {
+    try {
+      if (contactRequest.eventType === ContactMeEventType.SUBSCRIBENEWSLETTER) {
+        await this.newsletterService.subscribe(
+          contactRequest.subscribeRequest!,
+        );
+      }
+    } catch (error) {
+      return this.retryService.handleProcessingFailure(
+        message,
+        CONTACT_QUEUE_GROUP,
+        error,
+      );
+    }
   }
 
   async sendContactRequest(
     contactRequest: ContactMeEventRequest,
   ): Promise<void> {
-    await this.rabbitService.addToQueue(this.contactRoutingKey, contactRequest);
+    await this.amqpConnection.publish(
+      RABBITMQ_EXCHANGES.queue,
+      CONTACT_QUEUE_GROUP.routingKey,
+      contactRequest,
+    );
   }
 }

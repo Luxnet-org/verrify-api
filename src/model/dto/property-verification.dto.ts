@@ -7,36 +7,39 @@ import { StageHistoryEntry } from './stage-history-entry.dto';
 import { VerificationPackageDto } from './verification-package.dto';
 
 export class PropertyVerificationDto extends DateDto {
-    @ApiProperty()
-    stage: VerificationStageStatus;
+  @ApiProperty()
+  stage: VerificationStageStatus;
 
-    @ApiPropertyOptional()
-    caseId: string | null;
+  @ApiPropertyOptional()
+  caseId: string | null;
 
-    @ApiPropertyOptional()
-    adminComments: any | null;
+  @ApiPropertyOptional()
+  adminComments: string | null;
 
-    @ApiPropertyOptional()
-    reviewedAt: Date | null;
+  @ApiPropertyOptional()
+  reviewedAt: Date | null;
 
-    @ApiProperty({ type: [String] })
-    verificationFiles: string[];
+  @ApiProperty({ type: [String] })
+  verificationFiles: string[];
 
-    @ApiProperty({ type: [String] })
-    adminStageFiles: string[];
+  @ApiProperty({ type: [String] })
+  adminStageFiles: string[];
 
-    @ApiProperty({ type: () => PropertyDto })
-    property: PropertyDto | null;
+  @ApiProperty({ type: () => PropertyDto })
+  property: PropertyDto | null;
 
-    @ApiProperty({ type: () => UserDto })
-    user: UserDto | null;
+  @ApiProperty({ type: () => UserDto })
+  user: UserDto | null;
 
-    @ApiPropertyOptional({ type: () => UserDto })
-    reviewUser: UserDto | null;
+  @ApiPropertyOptional({ type: () => UserDto })
+  reviewUser: UserDto | null;
 
-    @ApiProperty({ type: [StageHistoryEntry], description: 'Ordered array of stage transitions with timestamps' })
-    stageHistory: StageHistoryEntry[];
+  @ApiProperty({
+    type: [StageHistoryEntry],
+    description: 'Ordered array of stage transitions with timestamps',
+  })
+  stageHistory: StageHistoryEntry[];
 
-    @ApiPropertyOptional({ type: () => VerificationPackageDto })
-    verificationPackage: VerificationPackageDto | null;
+  @ApiPropertyOptional({ type: () => VerificationPackageDto })
+  verificationPackage: VerificationPackageDto | null;
 }

@@ -53,6 +53,8 @@ EMAIL_HOST=smtp.example.com
 EMAIL_PORT=587
 EMAIL_USERNAME=username
 EMAIL_PASSWORD=password
+EMAIL_PROVIDER=smtp
+EMAIL_REQUIRE_TLS=true
 EMAIL_SENDER=noreply@verrify.net
 ADMIN_EMAIL=admin@verrify.net
 

@@ -93,7 +93,9 @@ export class TransactionService {
 
             return data; // contains authorization_url, access_code, reference
         } catch (error) {
-            throw new InternalServerErrorException('Failed to initialize Paystack transaction');
+            throw new InternalServerErrorException(
+                'Failed to initialize Paystack transaction',
+            );
         }
     }
 

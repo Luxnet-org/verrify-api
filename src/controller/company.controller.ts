@@ -32,7 +32,7 @@ import { VerdictDto } from '../model/request/verdict.dto';
 @ApiTags('Real Estate Company API')
 @Controller('company')
 export class CompanyController {
-  constructor(private readonly companyService: CompanyService) { }
+  constructor(private readonly companyService: CompanyService) {}
 
   @RequireRoles(UserRole.ADMIN)
   @ApiOperation({
@@ -186,13 +186,8 @@ export class CompanyController {
   @Get('/get/:id')
   async getOne(
     @Param('id') companyId: string,
-    @Req() request: Request,
   ): Promise<ApiResponse<CompanyDto>> {
-    const userInfo: UserInfo = request.user!;
-    const response: CompanyDto = await this.companyService.findOne(
-      companyId,
-      userInfo.userId,
-    );
+    const response: CompanyDto = await this.companyService.findOne(companyId);
 
     return ApiResponse.success(response, HttpStatus.OK);
   }

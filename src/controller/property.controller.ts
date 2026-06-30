@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { PropertyService } from '../service/property/property.service';
+import { PropertyGetService } from '../service/property/property-get.service';
 import { ApiResponse } from '../utility/api-response';
 import {
   SwaggerApiPaginatedResponseData,
@@ -22,8 +23,6 @@ import { Request } from 'express';
 import { UserInfo } from '../common/guards/auth.guard';
 import { CreatePropertyRequestDto } from '../model/request/create-property-request.dto';
 import { UpdatePropertyRequestDto } from '../model/request/update-property-request.dto';
-import { RequireRoles } from '../common/decorator/role.decorator';
-import { UserRole } from '../model/enum/role.enum';
 import {
   PaginationAndSortingResult,
   PaginationQueryDto,
@@ -35,13 +34,14 @@ import {
   NearbyQueryDto,
   ViewportQueryDto,
 } from '../model/request/property-view-query.dto';
-import { PropertySearchQueryDto } from '../model/request/property-search.dto';
-import { VerdictDto } from '../model/request/verdict.dto';
 
 @ApiTags('Property API')
 @Controller('property')
 export class PropertyController {
-  constructor(private readonly propertyService: PropertyService) { }
+  constructor(
+    private readonly propertyService: PropertyService,
+    private readonly propertyGetService: PropertyGetService,
+  ) {}
 
   @ApiOperation({ summary: 'Api endpoint to create property' })
   @SwaggerApiResponseData({
@@ -107,8 +107,6 @@ export class PropertyController {
     return ApiResponse.success(response, HttpStatus.OK);
   }
 
-
-
   @ApiOperation({ summary: 'Api endpoint to update property' })
   @SwaggerApiResponseData({
     dataClass: PropertyDto,
@@ -148,7 +146,7 @@ export class PropertyController {
   > {
     const userInfo: UserInfo = request.user!;
     const response: PaginationAndSortingResult<PropertyLookupResponseDto> =
-      await this.propertyService.getPropertiesInViewport(
+      await this.propertyGetService.getPropertiesInViewport(
         userInfo.userId,
         propertyQuery,
       );
@@ -174,7 +172,7 @@ export class PropertyController {
   > {
     const userInfo: UserInfo = request.user!;
     const response: PaginationAndSortingResult<PropertyLookupResponseDto> =
-      await this.propertyService.getPropertiesByLocation(
+      await this.propertyGetService.getPropertiesByLocation(
         userInfo.userId,
         locationName,
         propertyQuery,
@@ -200,7 +198,7 @@ export class PropertyController {
   > {
     const userInfo: UserInfo = request.user!;
     const response: PaginationAndSortingResult<PropertyLookupResponseDto> =
-      await this.propertyService.getNearbyProperties(
+      await this.propertyGetService.getNearbyProperties(
         userInfo.userId,
         propertyQuery,
       );
@@ -222,7 +220,7 @@ export class PropertyController {
   ): Promise<ApiResponse<PaginationAndSortingResult<PropertyDto>>> {
     const userInfo: UserInfo = request.user!;
     const response: PaginationAndSortingResult<PropertyDto> =
-      await this.propertyService.getAllCompanyProperties(
+      await this.propertyGetService.getAllCompanyProperties(
         userInfo.userId,
         companyId,
         propertyQuery,
@@ -243,7 +241,7 @@ export class PropertyController {
     @Req() request: Request,
   ): Promise<ApiResponse<PropertyDto>> {
     const userInfo: UserInfo = request.user!;
-    const response: PropertyDto = await this.propertyService.getOne(
+    const response: PropertyDto = await this.propertyGetService.getOne(
       identifier,
       userInfo.userId,
     );
@@ -267,7 +265,7 @@ export class PropertyController {
   ): Promise<ApiResponse<PaginationAndSortingResult<PropertyDto>>> {
     const userInfo: UserInfo = request.user!;
     const response: PaginationAndSortingResult<PropertyDto> =
-      await this.propertyService.getAllPropertySubProperty(
+      await this.propertyGetService.getAllPropertySubProperty(
         identifier,
         userInfo.userId,
         propertyQuery,

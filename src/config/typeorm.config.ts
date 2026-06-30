@@ -5,6 +5,8 @@ import { config } from 'dotenv';
 config();
 
 const configService = new ConfigService();
+const dbSsl =
+  `${configService.get<string>('DB_SSL') ?? 'false'}`.toLowerCase() === 'true';
 
 const AppDataSource = new DataSource({
   type: 'postgres',
@@ -19,10 +21,7 @@ const AppDataSource = new DataSource({
   // migrations: ['src/database/migrations/*-migration.ts'],
   migrationsRun: false,
   logging: true,
-  ssl:
-    configService.get<string>('APP_PROFILE') === 'prod'
-      ? { rejectUnauthorized: false }
-      : false,
+  ssl: dbSsl ? { rejectUnauthorized: false } : false,
 });
 
 export default AppDataSource;

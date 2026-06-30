@@ -30,7 +30,7 @@ export class FileService {
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
     private readonly configService: ConfigService<ConfigInterface>,
-  ) { }
+  ) {}
 
   async uploadFileService(
     fileType: FileType,
@@ -79,7 +79,9 @@ export class FileService {
     fileType: FileType,
     manager?: EntityManager,
   ): Promise<FileEntity> {
-    const repo = manager ? manager.getRepository(FileEntity) : this.fileRepository;
+    const repo = manager
+      ? manager.getRepository(FileEntity)
+      : this.fileRepository;
     let findFile: FileEntity | null = await repo.findOne({
       where: {
         url,
@@ -93,6 +95,7 @@ export class FileService {
         'surveyPlan',
         'letterOfIntent',
         'deedOfConveyance',
+        'otherDocumentProperty',
         'articleTitleImage',
         'propertyVerification',
         'adminPropertyVerification',
@@ -209,7 +212,8 @@ export class FileService {
             );
           }
 
-          fileEntity.propertyVerification = entity as unknown as PropertyVerification;
+          fileEntity.propertyVerification =
+            entity as unknown as PropertyVerification;
           break;
         case FileType.ADMIN_STAGE_DOCUMENT:
           if (fileEntity.adminPropertyVerification) {
@@ -218,7 +222,17 @@ export class FileService {
             );
           }
 
-          fileEntity.adminPropertyVerification = entity as unknown as PropertyVerification;
+          fileEntity.adminPropertyVerification =
+            entity as unknown as PropertyVerification;
+          break;
+        case FileType.PROPERTY_OTHER_DOCUMENT:
+          if (fileEntity.otherDocumentProperty) {
+            throw new BadRequestException(
+              'File is already associated with property',
+            );
+          }
+
+          fileEntity.otherDocumentProperty = entity as unknown as Property;
           break;
         default:
           break;
@@ -235,9 +249,13 @@ export class FileService {
       fileEntity.companyAddressFile = null;
       fileEntity.propertyVerification = null;
       fileEntity.adminPropertyVerification = null;
+      fileEntity.otherDocumentProperty = null;
+      fileEntity.otherDocumentLabel = null;
     }
 
-    const repo = manager ? manager.getRepository(FileEntity) : this.fileRepository;
+    const repo = manager
+      ? manager.getRepository(FileEntity)
+      : this.fileRepository;
     const updatedFile: FileEntity = await repo.save(fileEntity);
 
     this.logger.log('File updated successfully', FileService.name);

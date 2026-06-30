@@ -16,31 +16,34 @@ export class PropertyLookupResponseDto {
   pin: string | null;
 
   @ApiProperty()
-  description: string;
+  description: string | null;
 
   @ApiProperty()
   propertyVerificationStatus: PropertyVerificationStatus | null;
 
   @ApiProperty()
-  area: number;
+  area: number | null;
 
   @ApiProperty()
-  polygon: Geometry;
+  polygon: Geometry | null;
 
   @ApiProperty()
-  address: string;
+  address: string | null;
 
   @ApiProperty()
-  city: string;
+  city: string | null;
 
   @ApiProperty()
-  state: string;
+  state: string | null;
 
   @ApiProperty()
   propertyType: PropertyType;
 
   @ApiProperty()
   isSubProperty: boolean;
+
+  @ApiProperty()
+  isPublic: boolean;
 
   @ApiProperty()
   users: UserLookupResponseDto[] | null;

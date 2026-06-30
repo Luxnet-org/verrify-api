@@ -50,15 +50,28 @@ export class FileEntity extends Auditable {
   @JoinColumn()
   deedOfConveyance: Property | null;
 
+  @ManyToOne(() => Property, (property) => property.otherDocuments)
+  @JoinColumn()
+  otherDocumentProperty: Property | null;
+
+  @Column({ type: 'character varying', nullable: true })
+  otherDocumentLabel: string | null;
+
   @OneToOne(() => Article, (article) => article.titleImage)
   @JoinColumn()
   articleTitleImage: Article | null;
 
-  @ManyToOne(() => PropertyVerification, (verification) => verification.verificationFiles)
+  @ManyToOne(
+    () => PropertyVerification,
+    (verification) => verification.verificationFiles,
+  )
   @JoinColumn()
   propertyVerification: PropertyVerification | null;
 
-  @ManyToOne(() => PropertyVerification, (verification) => verification.adminStageFiles)
+  @ManyToOne(
+    () => PropertyVerification,
+    (verification) => verification.adminStageFiles,
+  )
   @JoinColumn()
   adminPropertyVerification: PropertyVerification | null;
 }
