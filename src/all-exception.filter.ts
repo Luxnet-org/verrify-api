@@ -5,8 +5,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
-import { MyLoggerService} from './service/logger/my-logger.service'
-import { Request, Response } from 'express';
+import { MyLoggerService } from './service/logger/my-logger.service';
+import { Response } from 'express';
 import { ApiResponse } from './utility/api-response';
 import { TypeORMError } from 'typeorm';
 
@@ -15,8 +15,15 @@ export class AllExceptionFilter extends BaseExceptionFilter {
   private readonly logger = new MyLoggerService(AllExceptionFilter.name);
 
   catch(exception: any, host: ArgumentsHost): void {
+    if (host.getType() !== 'http') {
+      const message =
+        exception instanceof Error ? exception.message : String(exception);
+
+      this.logger.error(message, AllExceptionFilter.name);
+      throw exception;
+    }
+
     const ctx = host.switchToHttp();
-    const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
     let responseStatus: number = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -36,8 +43,11 @@ export class AllExceptionFilter extends BaseExceptionFilter {
     response
       .status(responseStatus)
       .json(ApiResponse.error(responseString, responseStatus));
-    this.logger.error(responseString, AllExceptionFilter.name);
 
-    super.catch(exception, host);
+    const errorMessage =
+      exception instanceof Error
+        ? `${exception.message}${exception.stack ? `\n${exception.stack}` : ''}`
+        : responseString;
+    this.logger.error(errorMessage, AllExceptionFilter.name);
   }
 }

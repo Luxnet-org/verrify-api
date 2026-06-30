@@ -23,6 +23,7 @@ export interface ConfigInterface {
     password: string;
     host: string;
     port: number;
+    requireTLS: boolean;
     sender: string;
     adminEmail: string;
   };
@@ -96,6 +97,7 @@ export const validationSchema = Joi.object({
     then: Joi.required(),
     otherwise: Joi.optional(),
   }),
+  EMAIL_REQUIRE_TLS: Joi.boolean().truthy('true').falsy('false').optional(),
   EMAIL_SENDER: Joi.string().required(),
   ADMIN_EMAIL: Joi.string().required(),
 
@@ -147,11 +149,15 @@ export const configuration = (): ConfigInterface => ({
   },
   email: {
     resendAPIKey: process.env.EMAIL_RESEND_API_KEY!,
-    provider: (process.env.EMAIL_PROVIDER || 'smtp') as ConfigInterface['email']['provider'],
+    provider: (process.env.EMAIL_PROVIDER ||
+      'smtp') as ConfigInterface['email']['provider'],
     username: process.env.EMAIL_USERNAME!,
     password: process.env.EMAIL_PASSWORD!,
     host: process.env.EMAIL_HOST!,
     port: +process.env.EMAIL_PORT!,
+    requireTLS:
+      getBooleanEnv(process.env.EMAIL_REQUIRE_TLS) ??
+      process.env.APP_PROFILE === 'prod',
     sender: process.env.EMAIL_SENDER!,
     adminEmail: process.env.ADMIN_EMAIL!,
   },
