@@ -16,8 +16,8 @@ import { UpdatePropertyRequestDto } from '../../../model/request/update-property
 import { FileEntity } from '../../../model/entity/file.entity';
 import { LocationEntity } from '../../../model/entity/location.entity';
 import { Property } from '../../../model/entity/property.entity';
-import { PropertyVerificationVersion } from '../../../model/entity/property-verification-version.entity';
-import { PropertyVerificationVersionOtherDocument } from '../../../model/entity/property-verification-version-other-document.entity';
+import { PropertyVersion } from '../../../model/entity/property-version.entity';
+import { PropertyVersionOtherDocument } from '../../../model/entity/property-version-other-document.entity';
 import { User } from '../../../model/entity/user.entity';
 import { FileType } from '../../../model/enum/file-type.enum';
 import { PropertyVerificationStatus } from '../../../model/enum/property-verification-status.enum';
@@ -27,8 +27,8 @@ import { PropertyHelperService } from '../property-helper.service';
 @Injectable()
 export class PropertyVersionService {
   constructor(
-    @InjectRepository(PropertyVerificationVersion)
-    private readonly versionRepository: Repository<PropertyVerificationVersion>,
+    @InjectRepository(PropertyVersion)
+    private readonly versionRepository: Repository<PropertyVersion>,
     private readonly fileService: FileService,
     private readonly propertyHelper: PropertyHelperService,
   ) {}
@@ -84,7 +84,7 @@ export class PropertyVersionService {
     manager: EntityManager,
   ): Promise<void> {
     const activeVersionExists = await manager
-      .getRepository(PropertyVerificationVersion)
+      .getRepository(PropertyVersion)
       .exists({
         where: {
           property: { id: property.id },
@@ -102,9 +102,9 @@ export class PropertyVersionService {
   async findActiveVersion(
     propertyId: string,
     manager?: EntityManager,
-  ): Promise<PropertyVerificationVersion | null> {
+  ): Promise<PropertyVersion | null> {
     const repo = manager
-      ? manager.getRepository(PropertyVerificationVersion)
+      ? manager.getRepository(PropertyVersion)
       : this.versionRepository;
 
     return repo.findOne({
@@ -120,7 +120,7 @@ export class PropertyVersionService {
   async createSubmittedVersion(
     property: Property,
     manager: EntityManager,
-  ): Promise<PropertyVerificationVersion> {
+  ): Promise<PropertyVersion> {
     await this.ensureNoActiveVersion(property, manager);
     return this.createVersionSnapshot(
       property,
@@ -134,7 +134,7 @@ export class PropertyVersionService {
     property: Property,
     dto: UpdatePropertyRequestDto,
     manager: EntityManager,
-  ): Promise<PropertyVerificationVersion> {
+  ): Promise<PropertyVersion> {
     await this.ensureNoActiveVersion(property, manager);
     const initialStatus =
       property.propertyVerificationStatus ===
@@ -174,7 +174,7 @@ export class PropertyVersionService {
   async approveActiveVersion(
     property: Property,
     manager: EntityManager,
-  ): Promise<PropertyVerificationVersion | null> {
+  ): Promise<PropertyVersion | null> {
     const version = await this.findActiveVersion(property.id, manager);
     if (!version) return null;
 
@@ -182,9 +182,9 @@ export class PropertyVersionService {
 
     version.status = PropertyVerificationStatus.VERIFIED;
     this.appendStatusHistory(version, PropertyVerificationStatus.VERIFIED);
-    await manager.save(PropertyVerificationVersion, version);
+    await manager.save(PropertyVersion, version);
 
-    property.currentVerificationVersion = version;
+    property.currentVersion = version;
     return version;
   }
 
@@ -193,7 +193,7 @@ export class PropertyVersionService {
     dto: Partial<UpdatePropertyRequestDto>,
     manager: EntityManager,
     initialStatus: PropertyVerificationStatus,
-  ): Promise<PropertyVerificationVersion> {
+  ): Promise<PropertyVersion> {
     const locationPolygon = this.resolveValue(
       dto,
       'polygon',
@@ -205,7 +205,7 @@ export class PropertyVersionService {
       ? await this.resolveVersionUsers(property, dto, manager)
       : [];
 
-    const version = manager.create(PropertyVerificationVersion, {
+    const version = manager.create(PropertyVersion, {
       property: { id: property.id } as Property,
       status: initialStatus,
       propertyType:
@@ -220,10 +220,7 @@ export class PropertyVersionService {
       users: users.map((user) => ({ id: user.id }) as User),
     });
 
-    const savedVersion = await manager.save(
-      PropertyVerificationVersion,
-      version,
-    );
+    const savedVersion = await manager.save(PropertyVersion, version);
 
     await this.attachNamedDocument(
       savedVersion,
@@ -281,7 +278,7 @@ export class PropertyVersionService {
       manager,
     );
 
-    const completeVersion = await manager.findOne(PropertyVerificationVersion, {
+    const completeVersion = await manager.findOne(PropertyVersion, {
       where: { id: savedVersion.id },
       relations: this.versionRelations(),
     });
@@ -293,7 +290,7 @@ export class PropertyVersionService {
 
   private async applyVersionToProperty(
     property: Property,
-    version: PropertyVerificationVersion,
+    version: PropertyVersion,
     manager: EntityManager,
   ): Promise<void> {
     property.propertyType = version.propertyType;
@@ -351,7 +348,7 @@ export class PropertyVersionService {
   }
 
   private async attachNamedDocument(
-    version: PropertyVerificationVersion,
+    version: PropertyVersion,
     slot: VersionDocumentSlot,
     fileType: FileType,
     url: string | null,
@@ -361,16 +358,16 @@ export class PropertyVersionService {
 
     const file = await this.findFileByUrl(url, fileType, manager);
     this.setVersionDocument(version, slot, file);
-    await manager.save(PropertyVerificationVersion, version);
+    await manager.save(PropertyVersion, version);
   }
 
   private async replaceVersionOtherDocuments(
-    version: PropertyVerificationVersion,
+    version: PropertyVersion,
     documents: OtherDocumentRequestDto[],
     manager: EntityManager,
   ): Promise<void> {
     this.propertyHelper.validateOtherDocuments(documents);
-    await manager.delete(PropertyVerificationVersionOtherDocument, {
+    await manager.delete(PropertyVersionOtherDocument, {
       version: { id: version.id },
     });
 
@@ -381,8 +378,8 @@ export class PropertyVersionService {
         manager,
       );
       await manager.save(
-        PropertyVerificationVersionOtherDocument,
-        manager.create(PropertyVerificationVersionOtherDocument, {
+        PropertyVersionOtherDocument,
+        manager.create(PropertyVersionOtherDocument, {
           version,
           file,
           label: document.label.trim(),
@@ -416,7 +413,7 @@ export class PropertyVersionService {
 
   private async copyOtherDocumentsToProperty(
     property: Property,
-    version: PropertyVerificationVersion,
+    version: PropertyVersion,
     manager: EntityManager,
   ): Promise<void> {
     if (property.otherDocuments?.length) {
@@ -450,7 +447,7 @@ export class PropertyVersionService {
 
   private validateVersionCompleteness(
     property: Property,
-    version: PropertyVerificationVersion,
+    version: PropertyVersion,
   ): void {
     const missing: string[] = [];
     if (!version.address) missing.push('address');
@@ -471,7 +468,7 @@ export class PropertyVersionService {
 
     if (missing.length > 0) {
       throw new BadRequestException(
-        `Property verification version is missing required data: ${missing.join(', ')}`,
+        `Property version is missing required data: ${missing.join(', ')}`,
       );
     }
   }
@@ -614,7 +611,7 @@ export class PropertyVersionService {
   }
 
   private setVersionDocument(
-    version: PropertyVerificationVersion,
+    version: PropertyVersion,
     slot: VersionDocumentSlot,
     file: FileEntity,
   ): void {
@@ -639,14 +636,14 @@ export class PropertyVersionService {
 
   private getVersionRepository(
     manager?: EntityManager,
-  ): Repository<PropertyVerificationVersion> {
+  ): Repository<PropertyVersion> {
     return manager
-      ? manager.getRepository(PropertyVerificationVersion)
+      ? manager.getRepository(PropertyVersion)
       : this.versionRepository;
   }
 
   private appendStatusHistory(
-    version: PropertyVerificationVersion,
+    version: PropertyVersion,
     status: PropertyVerificationStatus,
   ): void {
     if (!version.statusHistory) version.statusHistory = [];

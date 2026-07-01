@@ -13,12 +13,12 @@ import { PropertyType } from '../enum/property-type.enum';
 import { PropertyVerificationStatus } from '../enum/property-verification-status.enum';
 import { FileEntity } from './file.entity';
 import { Property } from './property.entity';
-import { PropertyVerificationVersionOtherDocument } from './property-verification-version-other-document.entity';
+import { PropertyVersionOtherDocument } from './property-version-other-document.entity';
 import { User } from './user.entity';
 
-@Entity()
-export class PropertyVerificationVersion extends Auditable {
-  @ManyToOne(() => Property, (property) => property.verificationVersions)
+@Entity('property_version')
+export class PropertyVersion extends Auditable {
+  @ManyToOne(() => Property, (property) => property.versions)
   @JoinColumn()
   property: Property;
 
@@ -72,15 +72,12 @@ export class PropertyVerificationVersion extends Auditable {
   @JoinColumn()
   deedOfConveyance: FileEntity | null;
 
-  @OneToMany(
-    () => PropertyVerificationVersionOtherDocument,
-    (document) => document.version,
-  )
-  otherDocuments: PropertyVerificationVersionOtherDocument[];
+  @OneToMany(() => PropertyVersionOtherDocument, (document) => document.version)
+  otherDocuments: PropertyVersionOtherDocument[];
 
   @ManyToMany(() => User)
   @JoinTable({
-    name: 'property_verification_version_user',
+    name: 'property_version_user',
     joinColumn: { name: 'versionId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
   })
