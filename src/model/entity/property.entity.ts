@@ -16,7 +16,7 @@ import { Company } from './company.entity';
 import { LocationEntity } from './location.entity';
 import { FileEntity } from './file.entity';
 import { User } from './user.entity';
-import { PropertyVerificationVersion } from './property-verification-version.entity';
+import { PropertyVersion } from './property-version.entity';
 
 @Entity()
 export class Property extends Auditable {
@@ -84,12 +84,12 @@ export class Property extends Auditable {
   @OneToOne(() => FileEntity, (file) => file.letterOfIntent)
   letterOfIntent: FileEntity | null;
 
-  @ManyToOne(() => PropertyVerificationVersion, { nullable: true })
-  @JoinColumn()
-  currentVerificationVersion: PropertyVerificationVersion | null;
+  @ManyToOne(() => PropertyVersion, { nullable: true })
+  @JoinColumn({ name: 'currentVersionId' })
+  currentVersion: PropertyVersion | null;
 
-  @OneToMany(() => PropertyVerificationVersion, (version) => version.property)
-  verificationVersions: PropertyVerificationVersion[];
+  @OneToMany(() => PropertyVersion, (version) => version.property)
+  versions: PropertyVersion[];
 
   @ManyToOne(() => Property)
   @JoinColumn()

@@ -32,7 +32,7 @@ import { Company } from '../../model/entity/company.entity';
 import { MyLoggerService } from '../logger/my-logger.service';
 import { PropertyHelperService } from './property-helper.service';
 import { PropertyVersionService } from './version/property-version.service';
-import { PropertyVerificationVersion } from '../../model/entity/property-verification-version.entity';
+import { PropertyVersion } from '../../model/entity/property-version.entity';
 
 @Injectable()
 export class PropertyGetService {
@@ -282,9 +282,7 @@ export class PropertyGetService {
     return property;
   }
 
-  private convertVersionToDto(
-    version: PropertyVerificationVersion,
-  ): PropertyVersionDto {
+  private convertVersionToDto(version: PropertyVersion): PropertyVersionDto {
     return {
       id: version.id,
       createdAt: version.createdAt,

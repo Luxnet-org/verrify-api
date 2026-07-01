@@ -38,8 +38,8 @@ import { Company } from './model/entity/company.entity';
 import { CompanyService } from './service/company/company.service';
 import { CompanyController } from './controller/company.controller';
 import { Property } from './model/entity/property.entity';
-import { PropertyVerificationVersion } from './model/entity/property-verification-version.entity';
-import { PropertyVerificationVersionOtherDocument } from './model/entity/property-verification-version-other-document.entity';
+import { PropertyVersion } from './model/entity/property-version.entity';
+import { PropertyVersionOtherDocument } from './model/entity/property-version-other-document.entity';
 import { PropertyController } from './controller/property.controller';
 import { PropertyService } from './service/property/property.service';
 import { PropertyHelperService } from './service/property/property-helper.service';
@@ -190,8 +190,8 @@ import { HealthController } from './controller/health.controller';
       ActionVerification,
       Company,
       Property,
-      PropertyVerificationVersion,
-      PropertyVerificationVersionOtherDocument,
+      PropertyVersion,
+      PropertyVersionOtherDocument,
       Article,
       PortfolioItem,
       PropertyVerification,

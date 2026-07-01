@@ -338,7 +338,7 @@ export class PropertyService {
         'otherDocuments',
         'users',
         'users.profileImage',
-        'currentVerificationVersion',
+        'currentVersion',
       ],
     );
 
@@ -387,7 +387,7 @@ export class PropertyService {
         const hasApprovedBaseline =
           property.propertyVerificationStatus ===
             PropertyVerificationStatus.VERIFIED ||
-          property.currentVerificationVersion?.status ===
+          property.currentVersion?.status ===
             PropertyVerificationStatus.VERIFIED;
 
         if (propertyRequest.isPublic && !hasApprovedBaseline) {
