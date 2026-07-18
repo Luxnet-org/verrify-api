@@ -13,7 +13,7 @@ export class ArticleDto extends DateDto {
   slug: string;
 
   @ApiProperty()
-  content: any;
+  content: unknown;
 
   @ApiProperty()
   publishedAt?: Date;

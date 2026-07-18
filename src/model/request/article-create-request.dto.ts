@@ -20,7 +20,7 @@ export class ArticleCreateRequestDto {
 
   @ApiProperty()
   @IsNotEmpty()
-  content: any;
+  content: unknown;
 
   @ApiProperty()
   @IsBoolean()

@@ -1,4 +1,4 @@
-import { Auditable } from 'src/utility/autitable.entity';
+import { Auditable } from '../../utility/autitable.entity';
 import { Entity, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { FileType } from '../enum/file-type.enum';
 import { User } from './user.entity';
@@ -57,7 +57,9 @@ export class FileEntity extends Auditable {
   @Column({ type: 'character varying', nullable: true })
   otherDocumentLabel: string | null;
 
-  @OneToOne(() => Article, (article) => article.titleImage)
+  @OneToOne(() => Article, (article) => article.titleImage, {
+    onDelete: 'SET NULL',
+  })
   @JoinColumn()
   articleTitleImage: Article | null;
 

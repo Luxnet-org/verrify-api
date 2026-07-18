@@ -165,7 +165,7 @@ export class ArticleController {
 
   @RequireRoles(UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Api endpoint to update article by article ID (auth)',
+    summary: 'Api endpoint to delete article by article ID (auth)',
   })
   @SwaggerApiResponseData({
     type: 'string',
@@ -173,8 +173,16 @@ export class ArticleController {
   })
   @Delete('/:id')
   @HttpCode(HttpStatus.OK)
-  async delete(@Param('id') id: string): Promise<ApiResponse<string>> {
-    const response = await this.articleService.delete(id);
+  async delete(
+    @Param('id') id: string,
+    @Req() request: Request,
+  ): Promise<ApiResponse<string>> {
+    const userInfo: UserInfo = request.user!;
+    const response = await this.articleService.delete(
+      id,
+      userInfo.userId,
+      userInfo.role,
+    );
     return ApiResponse.success(response, HttpStatus.OK);
   }
 
