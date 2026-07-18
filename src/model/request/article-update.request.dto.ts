@@ -1,11 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ArticleStatusEnum } from '../enum/article-status-enum';
 
 export class ArticleUpdateRequestDto {
@@ -26,7 +20,7 @@ export class ArticleUpdateRequestDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  content: any;
+  content: unknown;
 
   @ApiPropertyOptional()
   @IsBoolean()

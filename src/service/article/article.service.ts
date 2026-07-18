@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { MyLoggerService } from '../logger/my-logger.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Article } from 'src/model/entity/article.entity';
+import { Article } from '../../model/entity/article.entity';
 import { Repository } from 'typeorm';
 import { ArticleDto } from '../../model/dto/article.dto';
 import { ArticleCreateRequestDto } from '../../model/request/article-create-request.dto';
@@ -184,10 +185,25 @@ export class ArticleService {
     return this.convertToDto(findArticle);
   }
 
-  async delete(articleId: string): Promise<string> {
-    const findArticle: Article = await this.findById(articleId);
+  async delete(
+    articleId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<string> {
+    const findArticle: Article = await this.findById(articleId, [
+      'createdUser',
+    ]);
 
-    await this.articleRepository.delete(findArticle);
+    const isCreator = findArticle.createdUser?.id === userId;
+    const isSuperAdmin = userRole === UserRole.SUPER_ADMIN;
+
+    if (!isCreator && !isSuperAdmin) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this article',
+      );
+    }
+
+    await this.articleRepository.delete(findArticle.id);
 
     this.logger.log(
       `Article ${findArticle.id} was deleted`,

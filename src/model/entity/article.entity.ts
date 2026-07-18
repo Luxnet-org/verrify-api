@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { Auditable } from '../../utility/autitable.entity';
 import { ArticleStatusEnum } from '../enum/article-status-enum';
 import { FileEntity } from './file.entity';
@@ -16,7 +16,7 @@ export class Article extends Auditable {
   slug: string;
 
   @Column({ type: 'jsonb', nullable: false })
-  content: any;
+  content: unknown;
 
   @Column({ type: 'timestamp with time zone', nullable: true })
   publishedAt?: Date;
@@ -30,7 +30,7 @@ export class Article extends Auditable {
   @OneToOne(() => FileEntity, (file) => file.articleTitleImage)
   titleImage: FileEntity;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn()
   createdUser: User;
 }
