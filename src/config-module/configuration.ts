@@ -41,10 +41,14 @@ export interface ConfigInterface {
   logs: {
     filePath: string;
   };
-  cloudinary: {
-    cloudName: string;
-    apiKey: string;
-    apiSecret: string;
+  r2: {
+    accountId: string;
+    accessKeyId: string;
+    secretAccessKey: string;
+    publicBucket: string;
+    privateBucket: string;
+    publicBaseUrl: string;
+    signedUrlTtlSeconds: number;
   };
   google: {
     clientMail: string;
@@ -111,9 +115,17 @@ export const validationSchema = Joi.object({
 
   LOG_FILE_PATH: Joi.string().required(),
 
-  CLOUDINARY_CLOUD_NAME: Joi.string().required(),
-  CLOUDINARY_API_KEY: Joi.string().required(),
-  CLOUDINARY_API_SECRET: Joi.string().required(),
+  R2_ACCOUNT_ID: Joi.string().required(),
+  R2_ACCESS_KEY_ID: Joi.string().required(),
+  R2_SECRET_ACCESS_KEY: Joi.string().required(),
+  R2_PUBLIC_BUCKET: Joi.string().required(),
+  R2_PRIVATE_BUCKET: Joi.string().required(),
+  R2_PUBLIC_BASE_URL: Joi.string().uri().required(),
+  R2_PRESIGNED_URL_TTL_SECONDS: Joi.number()
+    .integer()
+    .min(1200)
+    .max(2400)
+    .required(),
 
   GOOGLE_CLIENT_EMAIL: Joi.string().required(),
   GOOGLE_PRIVATE_KEY: Joi.string().required(),
@@ -175,10 +187,14 @@ export const configuration = (): ConfigInterface => ({
   logs: {
     filePath: process.env.LOG_FILE_PATH!,
   },
-  cloudinary: {
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME!,
-    apiKey: process.env.CLOUDINARY_API_KEY!,
-    apiSecret: process.env.CLOUDINARY_API_SECRET!,
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID!,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    publicBucket: process.env.R2_PUBLIC_BUCKET!,
+    privateBucket: process.env.R2_PRIVATE_BUCKET!,
+    publicBaseUrl: process.env.R2_PUBLIC_BASE_URL!,
+    signedUrlTtlSeconds: +process.env.R2_PRESIGNED_URL_TTL_SECONDS!,
   },
   google: {
     clientMail: process.env.GOOGLE_CLIENT_EMAIL!,

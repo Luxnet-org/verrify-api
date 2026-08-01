@@ -28,7 +28,7 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly fileService: FileService,
-  ) { }
+  ) {}
 
   async findAll(
     userQuery: PaginationQueryDto,
@@ -73,7 +73,7 @@ export class UserService {
       address,
       city,
       state,
-      profileImageUrl,
+      profileImageId,
       phoneNumber,
       dob,
     }: UpdateUserRequestDto = updateRequest;
@@ -108,7 +108,7 @@ export class UserService {
       user.phoneNumber = phoneNumber;
     }
 
-    if (profileImageUrl) {
+    if (profileImageId) {
       if (user.profileImage) {
         await this.fileService.updateFile(
           user.profileImage,
@@ -116,8 +116,8 @@ export class UserService {
           FileType.PROFILE_PICTURE,
         );
       }
-      user.profileImage = await this.fileService.updateWithUrl(
-        profileImageUrl,
+      user.profileImage = await this.fileService.updateWithFileId(
+        profileImageId,
         user,
         FileType.PROFILE_PICTURE,
       );

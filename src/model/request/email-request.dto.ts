@@ -14,4 +14,6 @@ export class EmailRequest {
   };
 
   attachments?: any[];
+
+  attachmentFileIds?: string[];
 }

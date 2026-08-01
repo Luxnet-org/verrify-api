@@ -18,7 +18,7 @@ Verrify API is the core backend service handling authentication, property and co
 *   **Queueing:** RabbitMQ
 *   **Emails:** NestJS Mailer with Pug templating
 *   **Payments:** Paystack Integrations & Webhooks
-*   **File Storage:** Cloudinary
+*   **File Storage:** Cloudflare R2
 *   **API Documentation:** Swagger / OpenAPI
 
 ## Installation
@@ -67,10 +67,14 @@ JWT_EXPIRE=1h
 REFRESH_EXPIRE=604800
 VERIFICATION_EXPIRE=86400
 
-# Third-party Services
-CLOUDINARY_CLOUD_NAME=xxx
-CLOUDINARY_API_KEY=xxx
-CLOUDINARY_API_SECRET=xxx
+# Cloudflare R2
+R2_ACCOUNT_ID=xxx
+R2_ACCESS_KEY_ID=xxx
+R2_SECRET_ACCESS_KEY=xxx
+R2_PUBLIC_BUCKET=verrify-dev-public
+R2_PRIVATE_BUCKET=verrify-dev-private
+R2_PUBLIC_BASE_URL=https://files-dev.example.com
+R2_PRESIGNED_URL_TTL_SECONDS=1800
 
 PAYSTACK_PUBLIC_KEY=pk_test_xxx
 PAYSTACK_SECRET_KEY=sk_test_xxx
@@ -138,7 +142,28 @@ $ npm run test:cov
 *   **Verification Module:** Pipeline for Admin approval/rejection workflows assigning Verification Stages.
 *   **Payment Module:** Generates orders and tracks external transactions via Paystack webhook listeners.
 *   **Email Module:** Listens to RabbitMQ events and dispatches beautiful `.pug` styled transactional emails (Verification resets, Receipts, etc.).
-*   **File Module:** Secures attachments via Cloudinary integrations.
+*   **File Module:** Stores public media and private documents in Cloudflare R2, issuing short-lived URLs for private files.
+
+## Cloudflare R2 Setup
+
+Create separate public and private buckets for each environment, for example
+`verrify-dev-public`, `verrify-dev-private`, `verrify-prod-public`, and
+`verrify-prod-private`.
+
+1. Connect each public bucket to its environment-specific custom domain. A
+   development `r2.dev` URL may be used for local testing only.
+2. Leave both private buckets without a custom domain and disable their
+   `r2.dev` public development URLs.
+3. Create a distinct Object Read & Write R2 API token for each environment and
+   scope it only to that environment's public and private buckets.
+4. Store `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` as secrets. Store the
+   account ID, bucket names, public base URL, and signed URL TTL as environment
+   variables.
+5. Set `R2_PRESIGNED_URL_TTL_SECONDS` between `1200` and `2400` seconds.
+
+Uploads continue to pass through the NestJS multipart endpoint, so browser
+upload CORS rules are not required. Add public-domain CORS rules only when a
+frontend needs cross-origin `fetch`, canvas, or similar access.
 
 ## License
 

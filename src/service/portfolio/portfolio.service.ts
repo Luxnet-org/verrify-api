@@ -13,6 +13,7 @@ import {
 import { UserRole } from '../../model/enum/role.enum';
 import { PropertyGetService } from '../property/property-get.service';
 import { PropertyHelperService } from '../property/property-helper.service';
+import { FileService } from '../file/file.service';
 
 @Injectable()
 export class PortfolioService {
@@ -26,6 +27,7 @@ export class PortfolioService {
     private readonly propertyGetService: PropertyGetService,
     private readonly propertyHelper: PropertyHelperService,
     private readonly userService: UserService,
+    private readonly fileService: FileService,
   ) {}
 
   async lookupProperty(pin: string, userId: string): Promise<PropertyDto> {
@@ -102,12 +104,18 @@ export class PortfolioService {
     const [items, total] =
       await this.portfolioRepository.findAndCount(findOptions);
 
-    return PaginationAndSorting.getPaginateResult(
+    return PaginationAndSorting.getPaginateResultAsync(
       items,
       total,
       queryDto,
-      (item: PortfolioItem) => {
+      async (item: PortfolioItem) => {
         const property = item.property;
+        const [contractOfSale, surveyPlan, deedOfConveyance] =
+          await Promise.all([
+            this.fileService.resolveUrl(property.contractOfSale),
+            this.fileService.resolveUrl(property.surveyPlan),
+            this.fileService.resolveUrl(property.deedOfConveyance),
+          ]);
         return {
           id: property.id,
           name: property.name,
@@ -120,13 +128,9 @@ export class PortfolioService {
           city: property.location?.city,
           state: property.location?.state,
           propertyType: property.propertyType,
-          contractOfSale: property.contractOfSale
-            ? property.contractOfSale.url
-            : null,
-          surveyPlan: property.surveyPlan ? property.surveyPlan.url : null,
-          deedOfConveyance: property.deedOfConveyance
-            ? property.deedOfConveyance.url
-            : null,
+          contractOfSale,
+          surveyPlan,
+          deedOfConveyance,
           claimedAt: item.createdAt,
         };
       },

@@ -17,13 +17,9 @@ block content
       p(style="margin: 0; font-weight: bold; color: #374151; font-size: 14px;") Admin Comments:
       p(style="margin: 5px 0 0 0; color: #4B5563; font-size: 14px;") #{comments}
       
-  if attachments && attachments.length > 0
+  if attachmentsOmitted
     div(style="margin: 20px auto; max-width: 500px;")
-      p(style="font-weight: bold; color: #374151; font-size: 14px;") Attached Documents:
-      ul(style="padding-left: 20px; color: #4B5563; font-size: 14px;")
-        each file in attachments
-          li
-            a(href=file.path target="_blank" style="color: #2563EB; text-decoration: underline;")= file.filename || 'View Document'
+      p(style="color: #4B5563; font-size: 14px;") The documents were too large to attach to this email. Please view them from your dashboard.
   
   p(style="text-align: center; margin-top: 30px;")
     | You can log in to your dashboard at any time to check the full details of your verification requests and manage your properties.

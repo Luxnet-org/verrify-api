@@ -7,6 +7,10 @@ export type VersionDocumentSlot =
   | 'letterOfIntent'
   | 'deedOfConveyance';
 
+export interface PropertyVersionValidationOptions {
+  requirePropertyDocuments?: boolean;
+}
+
 export const ACTIVE_VERSION_STATUSES = [
   PropertyVerificationStatus.PENDING,
   PropertyVerificationStatus.PENDING_REVERIFICATION,

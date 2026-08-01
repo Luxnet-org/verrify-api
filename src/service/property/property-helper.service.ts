@@ -51,8 +51,8 @@ export class PropertyHelperService {
 
     property.otherDocuments = await Promise.all(
       otherDocuments.map(async (document) => {
-        const linkedDocument = await this.fileService.updateWithUrl(
-          document.url,
+        const linkedDocument = await this.fileService.updateWithFileId(
+          document.fileId,
           property,
           FileType.PROPERTY_OTHER_DOCUMENT,
           manager,
@@ -65,7 +65,7 @@ export class PropertyHelperService {
 
   validateOtherDocuments(otherDocuments: OtherDocumentRequestDto[]): void {
     const labels = new Set<string>();
-    const urls = new Set<string>();
+    const fileIds = new Set<string>();
 
     for (const document of otherDocuments) {
       const label = document.label.trim();
@@ -79,12 +79,12 @@ export class PropertyHelperService {
         );
       }
 
-      if (urls.has(document.url)) {
-        throw new BadRequestException('Other document URLs must be unique');
+      if (fileIds.has(document.fileId)) {
+        throw new BadRequestException('Other document file IDs must be unique');
       }
 
       labels.add(label);
-      urls.add(document.url);
+      fileIds.add(document.fileId);
     }
   }
 
@@ -284,10 +284,32 @@ export class PropertyHelperService {
     };
   }
 
-  convertToDto(
+  async convertToDto(
     property: Property,
     includeDocuments: boolean = true,
-  ): PropertyDto {
+  ): Promise<PropertyDto> {
+    const [
+      certificationOfOccupancy,
+      contractOfSale,
+      surveyPlan,
+      letterOfIntent,
+      deedOfConveyance,
+      otherDocumentUrls,
+    ] = includeDocuments
+      ? await Promise.all([
+          this.fileService.resolveUrl(property.certificationOfOccupancy),
+          this.fileService.resolveUrl(property.contractOfSale),
+          this.fileService.resolveUrl(property.surveyPlan),
+          this.fileService.resolveUrl(property.letterOfIntent),
+          this.fileService.resolveUrl(property.deedOfConveyance),
+          Promise.all(
+            (property.otherDocuments || []).map((document) =>
+              this.fileService.resolveUrl(document),
+            ),
+          ),
+        ])
+      : [null, null, null, null, null, []];
+
     return {
       id: property.id,
       name: property.name,
@@ -301,31 +323,16 @@ export class PropertyHelperService {
       city: property.location?.city ?? null,
       state: property.location?.state ?? null,
       propertyType: property.propertyType,
-      certificationOfOccupancy:
-        includeDocuments && property.certificationOfOccupancy
-          ? property.certificationOfOccupancy.url
-          : null,
-      contractOfSale:
-        includeDocuments && property.contractOfSale
-          ? property.contractOfSale.url
-          : null,
-      surveyPlan:
-        includeDocuments && property.surveyPlan
-          ? property.surveyPlan.url
-          : null,
-      letterOfIntent:
-        includeDocuments && property.letterOfIntent
-          ? property.letterOfIntent.url
-          : null,
-      deedOfConveyance:
-        includeDocuments && property.deedOfConveyance
-          ? property.deedOfConveyance.url
-          : null,
+      certificationOfOccupancy,
+      contractOfSale,
+      surveyPlan,
+      letterOfIntent,
+      deedOfConveyance,
       otherDocuments:
         includeDocuments && property.otherDocuments
-          ? property.otherDocuments.map((document) => ({
+          ? property.otherDocuments.map((document, index) => ({
               label: document.otherDocumentLabel as string,
-              url: document.url,
+              url: otherDocumentUrls[index]!,
             }))
           : null,
       users: property.isSubProperty
@@ -335,7 +342,7 @@ export class PropertyHelperService {
               firstName: user.firstName,
               lastName: user.lastName,
               email: user.email,
-              profileImageUrl: user.profileImage ? user.profileImage.url : null,
+              profileImageUrl: user.profileImage?.url ?? null,
             };
           })
         : null,

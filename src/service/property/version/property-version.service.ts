@@ -9,6 +9,7 @@ import { Polygon } from 'geojson';
 import { EntityManager, In, Repository } from 'typeorm';
 import {
   ACTIVE_VERSION_STATUSES,
+  PropertyVersionValidationOptions,
   VersionDocumentSlot,
 } from '../../../model/data/property-version.data';
 import { OtherDocumentRequestDto } from '../../../model/request/create-property-request.dto';
@@ -40,11 +41,11 @@ export class PropertyVersionService {
       'city',
       'state',
       'polygon',
-      'certificationOfOccupancy',
-      'contractOfSale',
-      'surveyPlan',
-      'letterOfIntent',
-      'deedOfConveyance',
+      'certificationOfOccupancyFileId',
+      'contractOfSaleFileId',
+      'surveyPlanFileId',
+      'letterOfIntentFileId',
+      'deedOfConveyanceFileId',
       'otherDocuments',
     ].some((field) => Object.prototype.hasOwnProperty.call(dto, field));
   }
@@ -120,6 +121,7 @@ export class PropertyVersionService {
   async createSubmittedVersion(
     property: Property,
     manager: EntityManager,
+    validationOptions: PropertyVersionValidationOptions = {},
   ): Promise<PropertyVersion> {
     await this.ensureNoActiveVersion(property, manager);
     return this.createVersionSnapshot(
@@ -127,6 +129,7 @@ export class PropertyVersionService {
       {},
       manager,
       PropertyVerificationStatus.PENDING,
+      validationOptions,
     );
   }
 
@@ -193,6 +196,7 @@ export class PropertyVersionService {
     dto: Partial<UpdatePropertyRequestDto>,
     manager: EntityManager,
     initialStatus: PropertyVerificationStatus,
+    validationOptions: PropertyVersionValidationOptions = {},
   ): Promise<PropertyVersion> {
     const locationPolygon = this.resolveValue(
       dto,
@@ -226,7 +230,7 @@ export class PropertyVersionService {
       savedVersion,
       'certificationOfOccupancy',
       FileType.CERTIFICATE_OF_OCCUPANCY,
-      this.resolveDocumentUrl(
+      this.resolveDocumentFileId(
         dto,
         'certificationOfOccupancy',
         property.certificationOfOccupancy,
@@ -237,28 +241,36 @@ export class PropertyVersionService {
       savedVersion,
       'contractOfSale',
       FileType.CONTRACT_OF_SALE,
-      this.resolveDocumentUrl(dto, 'contractOfSale', property.contractOfSale),
+      this.resolveDocumentFileId(
+        dto,
+        'contractOfSale',
+        property.contractOfSale,
+      ),
       manager,
     );
     await this.attachNamedDocument(
       savedVersion,
       'surveyPlan',
       FileType.SURVEY_PLAN,
-      this.resolveDocumentUrl(dto, 'surveyPlan', property.surveyPlan),
+      this.resolveDocumentFileId(dto, 'surveyPlan', property.surveyPlan),
       manager,
     );
     await this.attachNamedDocument(
       savedVersion,
       'letterOfIntent',
       FileType.LETTER_OF_INTENT,
-      this.resolveDocumentUrl(dto, 'letterOfIntent', property.letterOfIntent),
+      this.resolveDocumentFileId(
+        dto,
+        'letterOfIntent',
+        property.letterOfIntent,
+      ),
       manager,
     );
     await this.attachNamedDocument(
       savedVersion,
       'deedOfConveyance',
       FileType.DEED_OF_CONVEYANCE,
-      this.resolveDocumentUrl(
+      this.resolveDocumentFileId(
         dto,
         'deedOfConveyance',
         property.deedOfConveyance,
@@ -284,7 +296,11 @@ export class PropertyVersionService {
     });
     if (!completeVersion) throw new NotFoundException('Version not found');
 
-    this.validateVersionCompleteness(property, completeVersion);
+    this.validateVersionCompleteness(
+      property,
+      completeVersion,
+      validationOptions,
+    );
     return completeVersion;
   }
 
@@ -351,12 +367,12 @@ export class PropertyVersionService {
     version: PropertyVersion,
     slot: VersionDocumentSlot,
     fileType: FileType,
-    url: string | null,
+    fileId: string | null,
     manager: EntityManager,
   ): Promise<void> {
-    if (!url) return;
+    if (!fileId) return;
 
-    const file = await this.findFileByUrl(url, fileType, manager);
+    const file = await this.findFileById(fileId, fileType, manager);
     this.setVersionDocument(version, slot, file);
     await manager.save(PropertyVersion, version);
   }
@@ -372,8 +388,8 @@ export class PropertyVersionService {
     });
 
     for (const document of documents) {
-      const file = await this.findFileByUrl(
-        document.url,
+      const file = await this.findFileById(
+        document.fileId,
         FileType.PROPERTY_OTHER_DOCUMENT,
         manager,
       );
@@ -448,21 +464,27 @@ export class PropertyVersionService {
   private validateVersionCompleteness(
     property: Property,
     version: PropertyVersion,
+    validationOptions: PropertyVersionValidationOptions,
   ): void {
+    const requirePropertyDocuments =
+      validationOptions.requirePropertyDocuments ?? true;
     const missing: string[] = [];
     if (!version.address) missing.push('address');
     if (!version.locationPolygon) missing.push('polygon');
-    if (!version.contractOfSale) missing.push('contract of sale');
-    if (!version.surveyPlan) missing.push('survey plan');
+    if (requirePropertyDocuments && !version.contractOfSale)
+      missing.push('contract of sale');
+    if (requirePropertyDocuments && !version.surveyPlan)
+      missing.push('survey plan');
 
     if (property.isSubProperty) {
-      if (!version.deedOfConveyance) missing.push('deed of conveyance');
+      if (requirePropertyDocuments && !version.deedOfConveyance)
+        missing.push('deed of conveyance');
       if (!version.users || version.users.length <= 0)
         missing.push('assigned users');
     } else {
       if (!version.city) missing.push('city');
       if (!version.state) missing.push('state');
-      if (!version.certificationOfOccupancy)
+      if (requirePropertyDocuments && !version.certificationOfOccupancy)
         missing.push('certification of occupancy');
     }
 
@@ -483,14 +505,15 @@ export class PropertyVersionService {
       : (currentValue ?? null);
   }
 
-  private resolveDocumentUrl(
+  private resolveDocumentFileId(
     dto: Partial<UpdatePropertyRequestDto>,
     key: VersionDocumentSlot,
     currentFile?: FileEntity | null,
   ): string | null {
-    return Object.prototype.hasOwnProperty.call(dto, key)
-      ? ((dto[key] as string | null | undefined) ?? null)
-      : (currentFile?.url ?? null);
+    const dtoKey = `${key}FileId` as keyof UpdatePropertyRequestDto;
+    return Object.prototype.hasOwnProperty.call(dto, dtoKey)
+      ? ((dto[dtoKey] as string | null | undefined) ?? null)
+      : (currentFile?.id ?? null);
   }
 
   private mapExistingOtherDocuments(
@@ -498,7 +521,7 @@ export class PropertyVersionService {
   ): OtherDocumentRequestDto[] {
     return (documents || []).map((document) => ({
       label: document.otherDocumentLabel as string,
-      url: document.url,
+      fileId: document.id,
     }));
   }
 
@@ -534,13 +557,13 @@ export class PropertyVersionService {
     return [...new Set(emails)].sort();
   }
 
-  private async findFileByUrl(
-    url: string,
+  private async findFileById(
+    fileId: string,
     fileType: FileType,
     manager: EntityManager,
   ): Promise<FileEntity> {
     const file = await manager.findOne(FileEntity, {
-      where: { url },
+      where: { id: fileId },
       relations: ['otherDocumentProperty'],
     });
     if (!file) throw new NotFoundException('File not found');

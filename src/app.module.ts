@@ -28,7 +28,6 @@ import { ActionVerificationService } from './service/action-verification/action-
 import { EmailEvent } from './service/email/email-event.service';
 import { AuthController } from './controller/auth.controller';
 import { FileService } from './service/file/file.service';
-import { CloudinaryProvider } from './service/file/cloudinary.provider';
 import { FileController } from './controller/file.controller';
 import { UserController } from './controller/user.controller';
 import { StayAlive } from './service/stayAlive/stay-alive.service';
@@ -71,6 +70,8 @@ import { VerificationPackage } from './model/entity/verification-package.entity'
 import { VerificationPackageService } from './service/verification-package/verification-package.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthController } from './controller/health.controller';
+import { FILE_STORAGE } from './service/file/storage/file-storage.constants';
+import { R2StorageService } from './service/file/storage/r2-storage.service';
 
 @Module({
   imports: [
@@ -239,8 +240,10 @@ import { HealthController } from './controller/health.controller';
     ActionVerificationService,
     EmailEvent,
     FileService,
-    CloudinaryProvider,
-    FileService,
+    {
+      provide: FILE_STORAGE,
+      useClass: R2StorageService,
+    },
     StayAlive,
     CompanyService,
     PropertyService,

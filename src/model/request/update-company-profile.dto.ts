@@ -2,11 +2,10 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEnum,
-  IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
-import { CompanyVerificationStatus } from '../enum/company-verification-status.enum';
 import { AddressFileTypeEnum } from '../enum/address-file-type.enum';
 
 export class UpdateCompanyProfileDto {
@@ -32,13 +31,15 @@ export class UpdateCompanyProfileDto {
 
   @ApiPropertyOptional()
   @IsString()
+  @IsUUID()
   @IsOptional()
-  proofOfAddress: string;
+  proofOfAddressFileId: string;
 
   @ApiPropertyOptional()
   @IsString()
+  @IsUUID()
   @IsOptional()
-  profileImage: string;
+  profileImageId: string;
 
   @ApiPropertyOptional()
   @IsString()

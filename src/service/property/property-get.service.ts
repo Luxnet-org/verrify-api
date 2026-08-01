@@ -33,6 +33,7 @@ import { MyLoggerService } from '../logger/my-logger.service';
 import { PropertyHelperService } from './property-helper.service';
 import { PropertyVersionService } from './version/property-version.service';
 import { PropertyVersion } from '../../model/entity/property-version.entity';
+import { FileService } from '../file/file.service';
 import AppConstants from '../../utility/app-constants';
 
 @Injectable()
@@ -50,6 +51,7 @@ export class PropertyGetService {
     private readonly userService: UserService,
     private readonly propertyHelper: PropertyHelperService,
     private readonly propertyVersionService: PropertyVersionService,
+    private readonly fileService: FileService,
   ) {}
 
   async getAllProperties(
@@ -104,7 +106,7 @@ export class PropertyGetService {
       `Retrieved property ${property.id} for user ${userId}`,
       PropertyGetService.name,
     );
-    const response = this.propertyHelper.convertToDto(
+    const response = await this.propertyHelper.convertToDto(
       property,
       includeDocuments,
     );
@@ -152,12 +154,11 @@ export class PropertyGetService {
       PropertyGetService.name,
     );
 
-    return {
-      current: this.propertyHelper.convertToDto(property, true),
-      pendingVersion: activeVersion
-        ? this.convertVersionToDto(activeVersion)
-        : null,
-    };
+    const [current, pendingVersion] = await Promise.all([
+      this.propertyHelper.convertToDto(property, true),
+      activeVersion ? this.convertVersionToDto(activeVersion) : null,
+    ]);
+    return { current, pendingVersion };
   }
 
   async getAllCompanyProperties(
@@ -207,7 +208,7 @@ export class PropertyGetService {
       `Retrieved company properties for company ${company.id} for user ${userId}`,
       PropertyGetService.name,
     );
-    return PaginationAndSorting.getPaginateResult(
+    return PaginationAndSorting.getPaginateResultAsync(
       properties,
       count,
       propertyQuery,
@@ -257,7 +258,7 @@ export class PropertyGetService {
       `Retrieved sub-properties property ${property.id} for user ${userId}`,
       PropertyGetService.name,
     );
-    return PaginationAndSorting.getPaginateResult(
+    return PaginationAndSorting.getPaginateResultAsync(
       properties,
       count,
       propertyQuery,
@@ -286,7 +287,29 @@ export class PropertyGetService {
     return property;
   }
 
-  private convertVersionToDto(version: PropertyVersion): PropertyVersionDto {
+  private async convertVersionToDto(
+    version: PropertyVersion,
+  ): Promise<PropertyVersionDto> {
+    const [
+      certificationOfOccupancy,
+      contractOfSale,
+      surveyPlan,
+      letterOfIntent,
+      deedOfConveyance,
+      otherDocumentUrls,
+    ] = await Promise.all([
+      this.fileService.resolveUrl(version.certificationOfOccupancy),
+      this.fileService.resolveUrl(version.contractOfSale),
+      this.fileService.resolveUrl(version.surveyPlan),
+      this.fileService.resolveUrl(version.letterOfIntent),
+      this.fileService.resolveUrl(version.deedOfConveyance),
+      Promise.all(
+        (version.otherDocuments || []).map((document) =>
+          this.fileService.resolveUrl(document.file),
+        ),
+      ),
+    ]);
+
     return {
       id: version.id,
       createdAt: version.createdAt,
@@ -299,15 +322,15 @@ export class PropertyGetService {
       address: version.address,
       city: version.city,
       state: version.state,
-      certificationOfOccupancy: version.certificationOfOccupancy?.url ?? null,
-      contractOfSale: version.contractOfSale?.url ?? null,
-      surveyPlan: version.surveyPlan?.url ?? null,
-      letterOfIntent: version.letterOfIntent?.url ?? null,
-      deedOfConveyance: version.deedOfConveyance?.url ?? null,
+      certificationOfOccupancy,
+      contractOfSale,
+      surveyPlan,
+      letterOfIntent,
+      deedOfConveyance,
       otherDocuments: version.otherDocuments?.length
-        ? version.otherDocuments.map((document) => ({
+        ? version.otherDocuments.map((document, index) => ({
             label: document.label,
-            url: document.file.url,
+            url: otherDocumentUrls[index]!,
           }))
         : null,
       users: version.users?.length

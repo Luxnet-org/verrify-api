@@ -81,8 +81,8 @@ export class ArticleService {
 
     article = await this.articleRepository.save(article);
 
-    article.titleImage = await this.fileService.updateWithUrl(
-      request.titleImage,
+    article.titleImage = await this.fileService.updateWithFileId(
+      request.titleImageId,
       article,
       FileType.ARTICLE_TITLE_IMAGE,
     );
@@ -137,15 +137,15 @@ export class ArticleService {
 
     findArticle.featuredFlag = request.featuredFlag;
 
-    if (request.titleImage) {
+    if (request.titleImageId) {
       await this.fileService.updateFile(
         findArticle.titleImage,
         null,
         FileType.ARTICLE_TITLE_IMAGE,
       );
 
-      findArticle.titleImage = await this.fileService.updateWithUrl(
-        request.titleImage,
+      findArticle.titleImage = await this.fileService.updateWithFileId(
+        request.titleImageId,
         findArticle,
         FileType.ARTICLE_TITLE_IMAGE,
       );
@@ -279,7 +279,7 @@ export class ArticleService {
         return {
           id: article.id,
           title: article.title,
-          titleImage: article.titleImage.url,
+          titleImage: article.titleImage.url!,
           description: article.description,
           slug: article.slug,
           publishedAt: article.publishedAt,
@@ -316,7 +316,7 @@ export class ArticleService {
         return {
           id: article.id,
           title: article.title,
-          titleImage: article.titleImage.url,
+          titleImage: article.titleImage.url!,
           description: article.description,
           slug: article.slug,
           publishedAt: article.publishedAt,
@@ -364,7 +364,7 @@ export class ArticleService {
     return {
       id: article.id,
       title: article.title,
-      titleImage: article.titleImage.url,
+      titleImage: article.titleImage.url!,
       description: article.description,
       slug: article.slug,
       content: article.content,

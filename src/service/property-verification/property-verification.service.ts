@@ -133,11 +133,11 @@ export class PropertyVerificationService {
         verification,
       );
 
-      if (dto.verificationFiles && dto.verificationFiles.length > 0) {
+      if (dto.verificationFileIds && dto.verificationFileIds.length > 0) {
         await Promise.all(
-          dto.verificationFiles.map((url) =>
-            this.fileService.updateWithUrl(
-              url,
+          dto.verificationFileIds.map((fileId) =>
+            this.fileService.updateWithFileId(
+              fileId,
               savedVerification,
               FileType.VERIFICATION_DOCUMENT,
               manager,
@@ -290,11 +290,11 @@ export class PropertyVerificationService {
         verification,
       );
 
-      if (dto.verificationFiles && dto.verificationFiles.length > 0) {
+      if (dto.verificationFileIds && dto.verificationFileIds.length > 0) {
         await Promise.all(
-          dto.verificationFiles.map((url) =>
-            this.fileService.updateWithUrl(
-              url,
+          dto.verificationFileIds.map((fileId) =>
+            this.fileService.updateWithFileId(
+              fileId,
               savedVerification,
               FileType.VERIFICATION_DOCUMENT,
               manager,
@@ -345,6 +345,7 @@ export class PropertyVerificationService {
       await this.propertyVersionService.createSubmittedVersion(
         verification.property,
         manager,
+        { requirePropertyDocuments: false },
       );
       verification.property.propertyVerificationStatus =
         PropertyVerificationStatus.PENDING;
@@ -402,7 +403,7 @@ export class PropertyVerificationService {
     const [items, total] =
       await this.propertyVerificationRepository.findAndCount(findOptions);
 
-    return PaginationAndSorting.getPaginateResult(
+    return PaginationAndSorting.getPaginateResultAsync(
       items,
       total,
       queryDto,
@@ -603,9 +604,9 @@ export class PropertyVerificationService {
     if (comments) verification.adminComments = comments;
     if (files && files.length > 0) {
       await Promise.all(
-        files.map((url) =>
-          this.fileService.updateWithUrl(
-            url,
+        files.map((fileId) =>
+          this.fileService.updateWithFileId(
+            fileId,
             verification,
             FileType.ADMIN_STAGE_DOCUMENT,
           ),
@@ -639,12 +640,6 @@ export class PropertyVerificationService {
         'Congratulations! Your property verification is officially complete. You can view the reports on your dashboard.';
     }
 
-    const templateAttachments =
-      files?.map((url) => {
-        const filename = url.split('/').pop() || 'Document';
-        return { filename, path: url };
-      }) || [];
-
     await this.emailEvent.sendEmailRequest({
       type: EmailType.VERIFICATION_PIPELINE_UPDATE,
       to: savedVerification.user.email,
@@ -653,8 +648,8 @@ export class PropertyVerificationService {
         firstName: savedVerification.user.firstName,
         message,
         comments: comments || '',
-        attachments: templateAttachments,
       },
+      attachmentFileIds: files || [],
     });
 
     return this.convertToDto(savedVerification);
@@ -702,7 +697,7 @@ export class PropertyVerificationService {
 
     const [items, total] = await customQuery.getManyAndCount();
 
-    return PaginationAndSorting.getPaginateResult(
+    return PaginationAndSorting.getPaginateResultAsync(
       items,
       total,
       queryDto,
@@ -760,9 +755,17 @@ export class PropertyVerificationService {
     verification.stageHistory.push({ stage, completedAt: new Date() });
   }
 
-  public convertToDto(
+  public async convertToDto(
     verification: PropertyVerification,
-  ): PropertyVerificationDto {
+  ): Promise<PropertyVerificationDto> {
+    const [verificationFiles, adminStageFiles, property] = await Promise.all([
+      this.fileService.resolveUrls(verification.verificationFiles || []),
+      this.fileService.resolveUrls(verification.adminStageFiles || []),
+      verification.property
+        ? this.propertyService.convertToDto(verification.property)
+        : null,
+    ]);
+
     return {
       id: verification.id,
       createdAt: verification.createdAt,
@@ -771,13 +774,9 @@ export class PropertyVerificationService {
       caseId: verification.caseId,
       adminComments: verification.adminComments,
       reviewedAt: verification.reviewedAt,
-      verificationFiles:
-        verification.verificationFiles?.map((file) => file.url) || [],
-      adminStageFiles:
-        verification.adminStageFiles?.map((file) => file.url) || [],
-      property: verification.property
-        ? this.propertyService.convertToDto(verification.property)
-        : null,
+      verificationFiles,
+      adminStageFiles,
+      property,
       user: verification.user
         ? this.userService.convertToDto(verification.user)
         : null,

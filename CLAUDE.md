@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Verrify API is a NestJS 11 backend service for property and company verification, built with TypeScript, TypeORM (PostgreSQL + PostGIS), RabbitMQ, and Cloudinary.
+Verrify API is a NestJS 11 backend service for property and company verification, built with TypeScript, TypeORM (PostgreSQL + PostGIS), RabbitMQ, and Cloudflare R2.
 
 ## Common Commands
 
@@ -50,7 +50,7 @@ Single NestJS module (`AppModule`) with a flat service/controller layout — no 
 - **Auth**: JWT access tokens + refresh tokens. Global `AuthGuard` protects all routes by default; use `@Public()` to opt out. `@Roles()` + `RoleGuard` for RBAC.
 - **Email**: Dual provider — SMTP (via `@nestjs-modules/mailer`) or Resend, selected by `EMAIL_PROVIDER` env var. Email dispatch is event-driven through `EmailEvent` / `ContactEventService` which publish to RabbitMQ.
 - **Payments**: Paystack integration with order/transaction entities and webhook handling.
-- **Files**: Uploaded to Cloudinary via `CloudinaryProvider`; `FileService` supports transactional operations with an optional `EntityManager`.
+- **Files**: New uploads use public/private Cloudflare R2 buckets through an injected storage adapter. Legacy records retain their stored provider URLs; `FileService` supports transactional associations with an optional `EntityManager`.
 - **Validation**: Global `ValidationPipe` with `whitelist: true` and `forbidNonWhitelisted: true`. DTOs must use class-validator decorators.
 - **Global prefix**: All routes are prefixed (see `AppConstants.APP_GLOBAL_PREFIX`).
 - **Synchronize**: TypeORM `synchronize` is enabled in dev only. In production, use migrations.
