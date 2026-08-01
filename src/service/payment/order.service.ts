@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, FindOptionsWhere, Repository } from 'typeorm';
+import { InvalidOrderPaymentStateError } from '../../exception/invalid-order-payment-state.exception';
+import { OrderPaymentTransitionResultDto } from '../../model/dto/order-payment-transition-result.dto';
 import { Order } from '../../model/entity/order.entity';
 import { PropertyVerification } from '../../model/entity/property-verification.entity';
 import { User } from '../../model/entity/user.entity';
@@ -26,12 +32,76 @@ export class OrderService {
     private readonly packageRepository: Repository<VerificationPackage>,
   ) {}
 
+  async getOrderForPaymentInitialization(orderId: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['user'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.status !== OrderStatus.PENDING) {
+      throw new BadRequestException('Order is not in a pending state');
+    }
+
+    return order;
+  }
+
+  async markPaid(
+    manager: EntityManager,
+    orderId: string,
+  ): Promise<OrderPaymentTransitionResultDto> {
+    const order = await manager.findOne(Order, {
+      where: { id: orderId },
+      lock: { mode: 'pessimistic_write' },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.status === OrderStatus.PAID) {
+      return { order, transitioned: false };
+    }
+
+    if (order.status !== OrderStatus.PENDING) {
+      throw new InvalidOrderPaymentStateError(order.id, order.status);
+    }
+
+    order.status = OrderStatus.PAID;
+    await manager.save(order);
+
+    return { order, transitioned: true };
+  }
+
   async createVerificationOrder(
     verificationId: string,
     userId: string,
     packageId: string,
+    manager?: EntityManager,
   ): Promise<Order> {
-    const verification = await this.propertyVerificationRepository.findOne({
+    const propertyVerificationRepository = manager
+      ? manager.getRepository(PropertyVerification)
+      : this.propertyVerificationRepository;
+    const userRepository = manager
+      ? manager.getRepository(User)
+      : this.userRepository;
+    const packageRepository = manager
+      ? manager.getRepository(VerificationPackage)
+      : this.packageRepository;
+    const orderRepository = manager
+      ? manager.getRepository(Order)
+      : this.orderRepository;
+
+    if (manager) {
+      await propertyVerificationRepository.findOne({
+        where: { id: verificationId },
+        lock: { mode: 'pessimistic_write' },
+      });
+    }
+    const verification = await propertyVerificationRepository.findOne({
       where: { id: verificationId },
       relations: ['user'],
     });
@@ -40,38 +110,52 @@ export class OrderService {
       throw new NotFoundException('Verification request not found');
     }
 
-    // Must be in VERIFICATION_ACCEPTED stage to create an order
-    if (verification.stage !== VerificationStageStatus.VERIFICATION_ACCEPTED) {
+    if (
+      ![
+        VerificationStageStatus.VERIFICATION_ACCEPTED,
+        VerificationStageStatus.PENDING_PAYMENT,
+      ].includes(verification.stage)
+    ) {
       throw new NotFoundException(
         'Verification request is not in the correct stage to be paid for',
       );
     }
 
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const user = await userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const verificationPackage = await this.packageRepository.findOne({
+    const verificationPackage = await packageRepository.findOne({
       where: { id: packageId, isActive: true },
     });
     if (!verificationPackage) {
       throw new NotFoundException('Verification package not found or inactive');
     }
 
-    // We can check if a pending order already exists to avoid duplicates
-    const existingOrder = await this.orderRepository.findOne({
+    const existingOrder = await orderRepository.findOne({
       where: {
         propertyVerification: { id: verificationId },
         status: OrderStatus.PENDING,
       },
+      relations: [
+        'verificationPackage',
+        'propertyVerification',
+        'propertyVerification.user',
+        'user',
+      ],
     });
 
     if (existingOrder) {
+      if (existingOrder.verificationPackage?.id !== packageId) {
+        throw new BadRequestException(
+          'A pending order exists for a different verification package',
+        );
+      }
       return existingOrder;
     }
 
-    const order = this.orderRepository.create({
+    const order = orderRepository.create({
       amount: verificationPackage.price,
       currency: 'NGN',
       status: OrderStatus.PENDING,
@@ -80,19 +164,63 @@ export class OrderService {
       verificationPackage,
     });
 
-    const savedOrder = await this.orderRepository.save(order);
+    const savedOrder = await orderRepository.save(order);
 
     // Update verification with selected package and stage
     verification.verificationPackage = verificationPackage;
-    verification.stage = VerificationStageStatus.PENDING_PAYMENT;
-    if (!verification.stageHistory) verification.stageHistory = [];
-    verification.stageHistory.push({
-      stage: VerificationStageStatus.PENDING_PAYMENT,
-      completedAt: new Date(),
-    });
-    await this.propertyVerificationRepository.save(verification);
+    if (verification.stage !== VerificationStageStatus.PENDING_PAYMENT) {
+      verification.stage = VerificationStageStatus.PENDING_PAYMENT;
+      if (!verification.stageHistory) verification.stageHistory = [];
+      verification.stageHistory.push({
+        stage: VerificationStageStatus.PENDING_PAYMENT,
+        completedAt: new Date(),
+      });
+    }
+    await propertyVerificationRepository.save(verification);
 
     return savedOrder;
+  }
+
+  async findPendingVerificationOrder(
+    manager: EntityManager,
+    verificationId: string,
+  ): Promise<Order | null> {
+    return manager.findOne(Order, {
+      where: {
+        propertyVerification: { id: verificationId },
+        status: OrderStatus.PENDING,
+      },
+      relations: [
+        'verificationPackage',
+        'propertyVerification',
+        'propertyVerification.user',
+        'user',
+      ],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async cancelPendingOrder(
+    manager: EntityManager,
+    orderId: string,
+  ): Promise<void> {
+    await manager.update(
+      Order,
+      { id: orderId, status: OrderStatus.PENDING },
+      { status: OrderStatus.CANCELLED },
+    );
+  }
+
+  async hasPaidOrderForVerification(
+    manager: EntityManager,
+    verificationId: string,
+  ): Promise<boolean> {
+    return manager.exists(Order, {
+      where: {
+        propertyVerification: { id: verificationId },
+        status: OrderStatus.PAID,
+      },
+    });
   }
 
   async getMyOrders(
@@ -102,7 +230,7 @@ export class OrderService {
     const findOptions = PaginationAndSorting.createFindOptions<Order>(
       null,
       queryDto,
-      { user: { id: userId } } as any,
+      { user: { id: userId } },
       {},
       ['propertyVerification'],
     );
@@ -127,6 +255,7 @@ export class OrderService {
         user: { id: userId },
       },
       relations: ['transactions', 'propertyVerification'],
+      order: { createdAt: 'DESC' },
     });
 
     if (!order) {
@@ -142,7 +271,7 @@ export class OrderService {
             id: propertyVerification.id,
             stage: propertyVerification.stage,
             caseId: propertyVerification.caseId,
-            createdAt: (propertyVerification as any).createdAt,
+            createdAt: propertyVerification.createdAt,
           }
         : null,
     };
@@ -153,7 +282,7 @@ export class OrderService {
     status?: OrderStatus,
     userId?: string,
   ): Promise<PaginationAndSortingResult<Order>> {
-    const where: any = {};
+    const where: FindOptionsWhere<Order> = {};
     if (status) where.status = status;
     if (userId) where.user = { id: userId };
 

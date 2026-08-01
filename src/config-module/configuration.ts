@@ -59,6 +59,8 @@ export interface ConfigInterface {
   paystack: {
     publicKey: string;
     secretKey: string;
+    domain: 'test' | 'live';
+    timeoutMs: number;
   };
 }
 
@@ -134,6 +136,8 @@ export const validationSchema = Joi.object({
 
   PAYSTACK_PUBLIC_KEY: Joi.string().required(),
   PAYSTACK_SECRET_KEY: Joi.string().required(),
+  PAYSTACK_DOMAIN: Joi.string().valid('test', 'live').optional(),
+  PAYSTACK_TIMEOUT_MS: Joi.number().integer().positive().default(10000),
 });
 
 const getBooleanEnv = (value: string | undefined): boolean | undefined => {
@@ -205,5 +209,10 @@ export const configuration = (): ConfigInterface => ({
   paystack: {
     publicKey: process.env.PAYSTACK_PUBLIC_KEY!,
     secretKey: process.env.PAYSTACK_SECRET_KEY!,
+    domain: (process.env.PAYSTACK_DOMAIN ||
+      (process.env.APP_PROFILE === 'prod'
+        ? 'live'
+        : 'test')) as ConfigInterface['paystack']['domain'],
+    timeoutMs: +(process.env.PAYSTACK_TIMEOUT_MS || 10000),
   },
 });

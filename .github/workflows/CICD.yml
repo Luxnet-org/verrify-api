@@ -156,6 +156,8 @@ jobs:
 
           PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
           PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
+          PAYSTACK_DOMAIN=live
+          PAYSTACK_TIMEOUT_MS=10000
           EOF
           printf '%s\n' "GOOGLE_PRIVATE_KEY=${google_private_key}" >> .env
           printf '%s\n' "RABBITMQ_URI=${rabbitmq_uri}" >> .env
