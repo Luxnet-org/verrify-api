@@ -33,6 +33,7 @@ import { MyLoggerService } from '../logger/my-logger.service';
 import { PropertyHelperService } from './property-helper.service';
 import { PropertyVersionService } from './version/property-version.service';
 import { PropertyVersion } from '../../model/entity/property-version.entity';
+import AppConstants from '../../utility/app-constants';
 
 @Injectable()
 export class PropertyGetService {
@@ -269,9 +270,12 @@ export class PropertyGetService {
     propertyId: string,
     relations: string[] = [],
   ): Promise<Property> {
-    const isPin = propertyId.startsWith('VP-');
+    const normalizedPropertyId = propertyId.toUpperCase();
+    const isPin = normalizedPropertyId.startsWith(
+      `${AppConstants.PROPERTY_PIN_PREFIX}-`,
+    );
     const property: Property | null = await this.propertyRepository.findOne({
-      where: isPin ? { pin: propertyId } : { id: propertyId },
+      where: isPin ? { pin: normalizedPropertyId } : { id: propertyId },
       relations,
     });
 

@@ -32,6 +32,8 @@ import { ConfigInterface } from '../../config-module/configuration';
 import { PropertyHelperService } from './property-helper.service';
 import { PropertyGetService } from './property-get.service';
 import { PropertyVersionService } from './version/property-version.service';
+import AppConstants from '../../utility/app-constants';
+import { generateAvailableDomainIdentifier } from '../../utility/domain-identifier';
 
 @Injectable()
 export class PropertyService {
@@ -606,15 +608,14 @@ export class PropertyService {
         );
         property.isPublic = true;
         if (!property.pin) {
-          const statePrefix =
-            property.location && property.location.state
-              ? property.location.state.substring(0, 2).toUpperCase()
-              : 'XX';
-          const year = new Date().getFullYear().toString().substring(2);
-          const randomDigits = Math.floor(
-            1000 + Math.random() * 9000,
-          ).toString();
-          property.pin = `VP-${statePrefix}-${year}-${randomDigits}`;
+          property.pin = await generateAvailableDomainIdentifier(
+            AppConstants.PROPERTY_PIN_PREFIX,
+            (candidate) =>
+              manager.exists(Property, {
+                where: { pin: candidate },
+                withDeleted: true,
+              }),
+          );
         }
       } else {
         await this.propertyVersionService.rejectActiveVersion(
