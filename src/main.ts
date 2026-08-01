@@ -2,7 +2,7 @@ import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-import { AllExceptionFilter } from './all-exception.filter';
+import { AllExceptionFilter } from './exception/all-exception.filter';
 import AppConstants from './utility/app-constants';
 import { corsOptions } from './config/cors-oprions.config';
 

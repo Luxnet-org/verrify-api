@@ -5,9 +5,9 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
-import { MyLoggerService } from './service/logger/my-logger.service';
+import { MyLoggerService } from '../service/logger/my-logger.service';
 import { Response } from 'express';
-import { ApiResponse } from './utility/api-response';
+import { ApiResponse } from '../utility/api-response';
 import { TypeORMError } from 'typeorm';
 
 @Catch()

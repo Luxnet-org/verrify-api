@@ -1,5 +1,5 @@
 import { UserRole } from '../enum/role.enum';
-import { DateDto } from '../../utility/date.dto';
+import { DateDto } from './date.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserDto extends DateDto {

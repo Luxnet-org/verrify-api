@@ -1,4 +1,4 @@
-import { DateDto } from '../../utility/date.dto';
+import { DateDto } from './date.dto';
 import { ArticleStatusEnum } from '../enum/article-status-enum';
 import { ApiProperty } from '@nestjs/swagger';
 

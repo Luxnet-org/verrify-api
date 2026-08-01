@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DateDto } from '../../utility/date.dto';
+import { DateDto } from './date.dto';
 
 export class VerificationPackageDto extends DateDto {
   @ApiProperty()

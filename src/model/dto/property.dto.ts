@@ -1,7 +1,7 @@
 import { PropertyType } from '../enum/property-type.enum';
 import { PropertyVerificationStatus } from '../enum/property-verification-status.enum';
 import { Geometry } from 'geojson';
-import { DateDto } from '../../utility/date.dto';
+import { DateDto } from './date.dto';
 import { UserLookupResponseDto } from '../response/user-lookup-resonse.dto';
 import { ApiProperty } from '@nestjs/swagger';
 

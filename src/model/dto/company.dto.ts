@@ -1,4 +1,4 @@
-import { DateDto } from '../../utility/date.dto';
+import { DateDto } from './date.dto';
 import { CompanyVerificationStatus } from '../enum/company-verification-status.enum';
 import { AddressFileTypeEnum } from '../enum/address-file-type.enum';
 import { ApiProperty } from '@nestjs/swagger';
