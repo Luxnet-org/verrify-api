@@ -23,4 +23,4 @@ Jest is used for unit and e2e testing, with `ts-jest` for TypeScript transforms.
 Recent history favors concise, imperative commits, usually with Conventional Commit prefixes such as `feat:` and `fix:`. Keep subjects specific, for example: `fix: correct password reset token type check`. PRs should describe the behavior change, note any migration or env var impact, link the issue when applicable, and include sample request/response payloads or Swagger screenshots for API-facing changes.
 
 ## Security & Configuration Tips
-Keep secrets in `.env`; never commit credentials or live keys. Validate changes to CORS, JWT, payment, email, Cloudinary, and RabbitMQ settings before merging. When schema changes are required, commit the matching migration in `src/database/migrations/` with the code that depends on it.
+Keep secrets in `.env`; never commit credentials or live keys. Validate changes to CORS, JWT, payment, email, Cloudflare R2, and RabbitMQ settings before merging. When schema changes are required, commit the matching migration in `src/database/migrations/` with the code that depends on it.

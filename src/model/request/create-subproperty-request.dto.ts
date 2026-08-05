@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -53,26 +54,29 @@ export class CreateSubPropertyRequestDto {
   address: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional({
     description: 'Reference to certification of occupancy document',
   })
-  deedOfConveyance: string;
+  deedOfConveyanceFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional({
     description: 'Reference to contract of sale document',
   })
-  contractOfSale: string;
+  contractOfSaleFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional({ description: 'Reference to survey plan document' })
-  surveyPlan: string;
+  surveyPlanFileId: string;
 
   @IsArray()
   @ValidateNested({ each: true })

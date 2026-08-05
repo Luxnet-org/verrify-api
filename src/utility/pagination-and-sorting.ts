@@ -164,4 +164,33 @@ export class PaginationAndSorting {
       },
     };
   }
+
+  public static async getPaginateResultAsync<T, R>(
+    data: T[],
+    total: number,
+    queryDto: PaginationQueryDto,
+    convertToDto: (data: T) => Promise<R>,
+    isBypass: boolean = false,
+  ): Promise<PaginationAndSortingResult<R>> {
+    const { page = AppConstants.PAGE, limit = AppConstants.PAGE_LIMIT } =
+      queryDto;
+    const validatedLimit = !isBypass
+      ? Math.min(limit, AppConstants.PAGE_LIMIT)
+      : limit;
+    const totalPages = Math.ceil(total / validatedLimit);
+    const newData = await Promise.all(data.map((item) => convertToDto(item)));
+
+    return {
+      data: newData,
+      meta: {
+        totalItems: total,
+        itemCount: data.length,
+        itemsPerPage: validatedLimit,
+        totalPages,
+        currentPage: page,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
 }

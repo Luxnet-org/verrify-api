@@ -2,6 +2,7 @@ import { RabbitMQQueueConfig } from '@golevelup/nestjs-rabbitmq';
 import {
   CONTACT_QUEUE_GROUP,
   EMAIL_QUEUE_GROUP,
+  PAYMENT_VERIFICATION_QUEUE_GROUP,
   RABBITMQ_EXCHANGES,
   RABBITMQ_RETRY,
   RabbitMQQueueGroup,
@@ -48,4 +49,5 @@ export const createQueueGroupConfiguration = (
 export const RABBITMQ_QUEUES = [
   ...createQueueGroupConfiguration(EMAIL_QUEUE_GROUP),
   ...createQueueGroupConfiguration(CONTACT_QUEUE_GROUP),
+  ...createQueueGroupConfiguration(PAYMENT_VERIFICATION_QUEUE_GROUP),
 ];

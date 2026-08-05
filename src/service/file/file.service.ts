@@ -1,19 +1,14 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { MyLoggerService } from '../logger/my-logger.service';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, In } from 'typeorm';
 import { FileEntity } from '../../model/entity/file.entity';
-import { ConfigInterface } from '../../config-module/configuration';
-import { ConfigService } from '@nestjs/config';
-import { UploadApiResponse } from 'cloudinary';
-import { DateUtility } from '../../utility/date-utility';
-import { v4 as uuid } from 'uuid';
-import { v2 as CloudinaryAPI } from 'cloudinary';
-import { RuntimeException } from '@nestjs/core/errors/exceptions';
 import { FileType } from '../../model/enum/file-type.enum';
 import { User } from '../../model/entity/user.entity';
 import { FileResponseDto } from '../../model/response/file-response.dto';
@@ -21,6 +16,12 @@ import { Company } from '../../model/entity/company.entity';
 import { Property } from '../../model/entity/property.entity';
 import { Article } from '../../model/entity/article.entity';
 import { PropertyVerification } from '../../model/entity/property-verification.entity';
+import { StorageProvider } from '../../model/enum/storage-provider.enum';
+import {
+  FILE_STORAGE,
+  isPublicFileType,
+} from './storage/file-storage.constants';
+import { FileStorage, SignedFileUrl } from './storage/file-storage.interface';
 
 @Injectable()
 export class FileService {
@@ -29,7 +30,8 @@ export class FileService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
-    private readonly configService: ConfigService<ConfigInterface>,
+    @Inject(FILE_STORAGE)
+    private readonly fileStorage: FileStorage,
   ) {}
 
   async uploadFileService(
@@ -47,9 +49,11 @@ export class FileService {
     );
 
     this.logger.log('File service saved file successfully', FileService.name);
+    const resolvedUrl = await this.resolveAccessUrl(uploadedFile);
     return {
       fileId: uploadedFile.id,
-      url: uploadedFile.url,
+      url: resolvedUrl.url,
+      expiresAt: resolvedUrl.expiresAt,
     };
   }
 
@@ -58,7 +62,7 @@ export class FileService {
     entity: T,
     fileType: FileType,
   ): Promise<FileEntity> {
-    const newFile: FileEntity = await this.uploadFileToCloudinary(file);
+    const newFile: FileEntity = await this.uploadFileToStorage(file, fileType);
     newFile.fileType = fileType;
 
     switch (fileType) {
@@ -73,8 +77,8 @@ export class FileService {
     return await this.fileRepository.save(newFile);
   }
 
-  async updateWithUrl<T>(
-    url: string,
+  async updateWithFileId<T>(
+    fileId: string,
     entity: T,
     fileType: FileType,
     manager?: EntityManager,
@@ -83,9 +87,7 @@ export class FileService {
       ? manager.getRepository(FileEntity)
       : this.fileRepository;
     let findFile: FileEntity | null = await repo.findOne({
-      where: {
-        url,
-      },
+      where: { id: fileId },
       relations: [
         'user',
         'companyAddressFile',
@@ -108,7 +110,7 @@ export class FileService {
 
     findFile = await this.updateFile(findFile, entity, fileType, manager);
 
-    this.logger.log('File updated with url successfully', FileService.name);
+    this.logger.log('File updated with file ID successfully', FileService.name);
     return findFile;
   }
 
@@ -262,38 +264,86 @@ export class FileService {
     return updatedFile;
   }
 
-  async uploadFileToCloudinary(file: Express.Multer.File): Promise<FileEntity> {
-    const fileName = `${DateUtility.currentDate.toISOString()}_${file.originalname}_${uuid()}`;
-    const uploadResult = await new Promise<UploadApiResponse>(
-      (resolve, reject) => {
-        CloudinaryAPI.uploader
-          .upload_stream(
-            { public_id: fileName, folder: 'verrify' },
-            (error, result) => {
-              if (error) {
-                return reject(new RuntimeException(error.message));
-              }
-              if (!result) {
-                return reject(
-                  new RuntimeException(
-                    'Upload failed: No result from Cloudinary',
-                  ),
-                );
-              }
-              return resolve(result);
-            },
-          )
-          .end(file.buffer);
-      },
+  async findFilesByIds(fileIds: string[]): Promise<FileEntity[]> {
+    if (fileIds.length === 0) return [];
+
+    const files = await this.fileRepository.find({
+      where: { id: In([...new Set(fileIds)]) },
+    });
+    const filesById = new Map(files.map((file) => [file.id, file]));
+    const missingFileId = fileIds.find((fileId) => !filesById.has(fileId));
+    if (missingFileId) {
+      throw new NotFoundException(`File with id ${missingFileId} not found`);
+    }
+
+    return fileIds.map((fileId) => filesById.get(fileId)!);
+  }
+
+  async resolveUrl(
+    file: FileEntity | null | undefined,
+  ): Promise<string | null> {
+    if (!file) return null;
+    return (await this.resolveAccessUrl(file)).url;
+  }
+
+  async resolveUrls(files: FileEntity[]): Promise<string[]> {
+    return Promise.all(files.map((file) => this.resolveUrl(file))).then(
+      (urls) => urls.filter((url): url is string => url !== null),
+    );
+  }
+
+  async resolveAccessUrl(file: FileEntity): Promise<SignedFileUrl> {
+    if (file.storageProvider === StorageProvider.CLOUDINARY) {
+      if (!file.url) {
+        throw new InternalServerErrorException(
+          `Legacy file ${file.id} does not have a URL`,
+        );
+      }
+      return { url: file.url, expiresAt: null };
+    }
+
+    if (isPublicFileType(file.fileType)) {
+      if (!file.url) {
+        throw new InternalServerErrorException(
+          `Public R2 file ${file.id} does not have a URL`,
+        );
+      }
+      return { url: file.url, expiresAt: null };
+    }
+
+    if (!file.bucket || !file.objectKey) {
+      throw new InternalServerErrorException(
+        `Private R2 file ${file.id} is missing storage metadata`,
+      );
+    }
+
+    return this.fileStorage.createSignedDownloadUrl(
+      file.bucket,
+      file.objectKey,
+      file.originalFileName,
+    );
+  }
+
+  private async uploadFileToStorage(
+    file: Express.Multer.File,
+    fileType: FileType,
+  ): Promise<FileEntity> {
+    const storedFile = await this.fileStorage.upload(
+      file,
+      fileType,
+      isPublicFileType(fileType),
     );
 
-    this.logger.log(
-      'File uploaded to cloudinary successfully',
-      FileService.name,
-    );
+    this.logger.log('File uploaded to R2 successfully', FileService.name);
     return this.fileRepository.create({
-      fileName,
-      url: uploadResult.secure_url,
+      fileName: storedFile.objectKey,
+      url: storedFile.url,
+      storageProvider: storedFile.storageProvider,
+      bucket: storedFile.bucket,
+      objectKey: storedFile.objectKey,
+      originalFileName: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
     });
   }
 }

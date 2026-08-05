@@ -38,3 +38,8 @@ export const CONTACT_QUEUE_GROUP = createQueueGroup(
   'verrifyConatct',
   'verrifyContactRoutingKey',
 );
+
+export const PAYMENT_VERIFICATION_QUEUE_GROUP = createQueueGroup(
+  'paymentVerification',
+  'paymentVerificationRoutingKey',
+);

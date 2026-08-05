@@ -7,7 +7,7 @@ import { MyLoggerService } from '../logger/my-logger.service';
 export interface ResendAttachment {
   /** Display name for the attachment */
   filename: string;
-  /** URL to the file (e.g. Cloudinary link) — Resend will fetch it automatically */
+  /** URL to the file — Resend will fetch it automatically */
   path?: string;
   /** Raw content buffer (alternative to path) */
   content?: Buffer | string;
@@ -19,10 +19,10 @@ export class ResendEmailService {
   private readonly resend: Resend | null;
   private readonly sender: string;
 
-  constructor(
-    private readonly configService: ConfigService<ConfigInterface>,
-  ) {
-    const apiKey = this.configService.get('email.resendAPIKey', { infer: true });
+  constructor(private readonly configService: ConfigService<ConfigInterface>) {
+    const apiKey = this.configService.get('email.resendAPIKey', {
+      infer: true,
+    });
     this.sender = this.configService.get('email.sender', { infer: true })!;
 
     if (!apiKey) {
@@ -69,9 +69,10 @@ export class ResendEmailService {
         }
         return {
           filename: a.filename,
-          content: typeof a.content === 'string'
-            ? Buffer.from(a.content, 'base64')
-            : (a.content || Buffer.from('')),
+          content:
+            typeof a.content === 'string'
+              ? Buffer.from(a.content, 'base64')
+              : a.content || Buffer.from(''),
         };
       });
     }
@@ -98,4 +99,3 @@ export class ResendEmailService {
     }
   }
 }
-

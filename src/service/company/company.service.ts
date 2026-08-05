@@ -174,7 +174,7 @@ export class CompanyService {
         throw new BadRequestException('Company profile already exist');
       }
 
-      if (companyDto.proofOfAddressType && !companyDto.proofOfAddress) {
+      if (companyDto.proofOfAddressType && !companyDto.proofOfAddressFileId) {
         throw new BadRequestException(
           'Provide proofOfAddress file when proofOfAddressType is specified',
         );
@@ -207,18 +207,18 @@ export class CompanyService {
         company.address = location;
       }
 
-      if (companyDto.proofOfAddress) {
-        company.proofOfAddress = await this.fileService.updateWithUrl(
-          companyDto.proofOfAddress,
+      if (companyDto.proofOfAddressFileId) {
+        company.proofOfAddress = await this.fileService.updateWithFileId(
+          companyDto.proofOfAddressFileId,
           company,
           FileType.PROOF_OF_ADDRESS,
           manager,
         );
       }
 
-      if (companyDto.profileImage) {
-        company.profileImage = await this.fileService.updateWithUrl(
-          companyDto.profileImage,
+      if (companyDto.profileImageId) {
+        company.profileImage = await this.fileService.updateWithFileId(
+          companyDto.profileImageId,
           company,
           FileType.COMPANY_PROFILE_PICTURE,
           manager,
@@ -226,7 +226,7 @@ export class CompanyService {
       }
 
       return {
-        dto: this.convertToDto(company),
+        dto: await this.convertToDto(company),
         userId: user.id,
       };
     });
@@ -246,8 +246,8 @@ export class CompanyService {
     const {
       phoneNumber,
       proofOfAddressType,
-      proofOfAddress,
-      profileImage,
+      proofOfAddressFileId,
+      profileImageId,
       address,
       city,
       state,
@@ -290,7 +290,7 @@ export class CompanyService {
         company.description = description;
       }
 
-      if (profileImage) {
+      if (profileImageId) {
         if (company.profileImage) {
           await this.fileService.updateFile(
             company.profileImage,
@@ -299,15 +299,15 @@ export class CompanyService {
             manager,
           );
         }
-        company.profileImage = await this.fileService.updateWithUrl(
-          profileImage,
+        company.profileImage = await this.fileService.updateWithFileId(
+          profileImageId,
           company,
           FileType.COMPANY_PROFILE_PICTURE,
           manager,
         );
       }
 
-      if (proofOfAddress || address || name) {
+      if (proofOfAddressFileId || address || name) {
         if (
           company.user.id === user.id &&
           user.role !== UserRole.ADMIN &&
@@ -342,7 +342,7 @@ export class CompanyService {
           company.address.state = state;
         }
 
-        if (proofOfAddress) {
+        if (proofOfAddressFileId) {
           if (!proofOfAddressType) {
             throw new BadRequestException(
               'To modify proofOfAddress file: set proofOfAddressType',
@@ -360,8 +360,8 @@ export class CompanyService {
             );
           }
 
-          company.proofOfAddress = await this.fileService.updateWithUrl(
-            proofOfAddress,
+          company.proofOfAddress = await this.fileService.updateWithFileId(
+            proofOfAddressFileId,
             company,
             FileType.PROOF_OF_ADDRESS,
             manager,
@@ -373,7 +373,7 @@ export class CompanyService {
 
       return {
         companyId: company.id,
-        dto: this.convertToDto(company),
+        dto: await this.convertToDto(company),
       };
     });
 
@@ -517,7 +517,7 @@ export class CompanyService {
     return `Company ${company.id} has been ${newStatus.toLowerCase()}`;
   }
 
-  convertToDto(company: Company): CompanyDto {
+  async convertToDto(company: Company): Promise<CompanyDto> {
     return {
       id: company.id,
       name: company.name,
@@ -526,10 +526,8 @@ export class CompanyService {
       phoneNumber: company.phoneNumber,
       companyVerificationStatus: company.companyVerificationStatus,
       proofOfAddressType: company.proofOfAddressType,
-      proofOfAddress: company.proofOfAddress
-        ? company.proofOfAddress.url
-        : null,
-      profileImage: company.profileImage ? company.profileImage.url : null,
+      proofOfAddress: await this.fileService.resolveUrl(company.proofOfAddress),
+      profileImage: company.profileImage?.url ?? null,
       address: company.address ? company.address.address : null,
       city: company.address ? company.address.city : null,
       state: company.address ? company.address.state : null,

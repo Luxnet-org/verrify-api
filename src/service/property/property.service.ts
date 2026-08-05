@@ -32,6 +32,8 @@ import { ConfigInterface } from '../../config-module/configuration';
 import { PropertyHelperService } from './property-helper.service';
 import { PropertyGetService } from './property-get.service';
 import { PropertyVersionService } from './version/property-version.service';
+import AppConstants from '../../utility/app-constants';
+import { generateAvailableDomainIdentifier } from '../../utility/domain-identifier';
 
 @Injectable()
 export class PropertyService {
@@ -99,37 +101,37 @@ export class PropertyService {
       await manager.save(location);
       property.location = location;
 
-      if (propertyRequest.certificationOfOccupancy) {
+      if (propertyRequest.certificationOfOccupancyFileId) {
         property.certificationOfOccupancy =
-          await this.fileService.updateWithUrl(
-            propertyRequest.certificationOfOccupancy,
+          await this.fileService.updateWithFileId(
+            propertyRequest.certificationOfOccupancyFileId,
             property,
             FileType.CERTIFICATE_OF_OCCUPANCY,
             manager,
           );
       }
 
-      if (propertyRequest.contractOfSale) {
-        property.contractOfSale = await this.fileService.updateWithUrl(
-          propertyRequest.contractOfSale,
+      if (propertyRequest.contractOfSaleFileId) {
+        property.contractOfSale = await this.fileService.updateWithFileId(
+          propertyRequest.contractOfSaleFileId,
           property,
           FileType.CONTRACT_OF_SALE,
           manager,
         );
       }
 
-      if (propertyRequest.surveyPlan) {
-        property.surveyPlan = await this.fileService.updateWithUrl(
-          propertyRequest.surveyPlan,
+      if (propertyRequest.surveyPlanFileId) {
+        property.surveyPlan = await this.fileService.updateWithFileId(
+          propertyRequest.surveyPlanFileId,
           property,
           FileType.SURVEY_PLAN,
           manager,
         );
       }
 
-      if (propertyRequest.letterOfIntent) {
-        property.letterOfIntent = await this.fileService.updateWithUrl(
-          propertyRequest.letterOfIntent,
+      if (propertyRequest.letterOfIntentFileId) {
+        property.letterOfIntent = await this.fileService.updateWithFileId(
+          propertyRequest.letterOfIntentFileId,
           property,
           FileType.LETTER_OF_INTENT,
           manager,
@@ -256,27 +258,27 @@ export class PropertyService {
       await manager.save(location);
       newProperty.location = location;
 
-      if (propertyRequest.deedOfConveyance) {
-        newProperty.deedOfConveyance = await this.fileService.updateWithUrl(
-          propertyRequest.deedOfConveyance,
+      if (propertyRequest.deedOfConveyanceFileId) {
+        newProperty.deedOfConveyance = await this.fileService.updateWithFileId(
+          propertyRequest.deedOfConveyanceFileId,
           newProperty,
           FileType.DEED_OF_CONVEYANCE,
           manager,
         );
       }
 
-      if (propertyRequest.contractOfSale) {
-        newProperty.contractOfSale = await this.fileService.updateWithUrl(
-          propertyRequest.contractOfSale,
+      if (propertyRequest.contractOfSaleFileId) {
+        newProperty.contractOfSale = await this.fileService.updateWithFileId(
+          propertyRequest.contractOfSaleFileId,
           newProperty,
           FileType.CONTRACT_OF_SALE,
           manager,
         );
       }
 
-      if (propertyRequest.surveyPlan) {
-        newProperty.surveyPlan = await this.fileService.updateWithUrl(
-          propertyRequest.surveyPlan,
+      if (propertyRequest.surveyPlanFileId) {
+        newProperty.surveyPlan = await this.fileService.updateWithFileId(
+          propertyRequest.surveyPlanFileId,
           newProperty,
           FileType.SURVEY_PLAN,
           manager,
@@ -606,15 +608,14 @@ export class PropertyService {
         );
         property.isPublic = true;
         if (!property.pin) {
-          const statePrefix =
-            property.location && property.location.state
-              ? property.location.state.substring(0, 2).toUpperCase()
-              : 'XX';
-          const year = new Date().getFullYear().toString().substring(2);
-          const randomDigits = Math.floor(
-            1000 + Math.random() * 9000,
-          ).toString();
-          property.pin = `VP-${statePrefix}-${year}-${randomDigits}`;
+          property.pin = await generateAvailableDomainIdentifier(
+            AppConstants.PROPERTY_PIN_PREFIX,
+            (candidate) =>
+              manager.exists(Property, {
+                where: { pin: candidate },
+                withDeleted: true,
+              }),
+          );
         }
       } else {
         await this.propertyVersionService.rejectActiveVersion(
@@ -663,10 +664,10 @@ export class PropertyService {
     return `Property ${property.id} has been ${newStatus.toLowerCase()}`;
   }
 
-  public convertToDto(
+  public async convertToDto(
     property: Property,
     includeDocuments: boolean = true,
-  ): PropertyDto {
+  ): Promise<PropertyDto> {
     return this.propertyHelper.convertToDto(property, includeDocuments);
   }
 

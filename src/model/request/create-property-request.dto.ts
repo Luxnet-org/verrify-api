@@ -6,6 +6,7 @@ import {
   IsArray,
   IsOptional,
   IsString,
+  IsUUID,
   ValidateNested,
 } from 'class-validator';
 import { Polygon } from 'geojson';
@@ -20,8 +21,9 @@ export class OtherDocumentRequestDto {
 
   @IsString()
   @IsNotEmpty()
-  @ApiProperty({ description: 'Uploaded file URL' })
-  url: string;
+  @IsUUID()
+  @ApiProperty({ description: 'Uploaded file ID' })
+  fileId: string;
 }
 
 export class CreatePropertyRequestDto {
@@ -68,34 +70,38 @@ export class CreatePropertyRequestDto {
   state: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional({
     description: 'Reference to certification of occupancy document',
   })
-  certificationOfOccupancy: string;
+  certificationOfOccupancyFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional({
     description: 'Reference to contract of sale document',
   })
-  contractOfSale: string;
+  contractOfSaleFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional({ description: 'Reference to survey plan document' })
-  surveyPlan: string;
+  surveyPlanFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional({
     description: 'Reference to letter of intent document',
   })
-  letterOfIntent: string;
+  letterOfIntentFileId: string;
 
   @IsArray()
   @ValidateNested({ each: true })

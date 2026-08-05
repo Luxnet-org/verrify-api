@@ -142,9 +142,13 @@ jobs:
 
           LOG_FILE_PATH=${{ vars.LOG_FILE_PATH }}
 
-          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+          R2_ACCOUNT_ID=${{ vars.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_PUBLIC_BUCKET=${{ vars.R2_PUBLIC_BUCKET }}
+          R2_PRIVATE_BUCKET=${{ vars.R2_PRIVATE_BUCKET }}
+          R2_PUBLIC_BASE_URL=${{ vars.R2_PUBLIC_BASE_URL }}
+          R2_PRESIGNED_URL_TTL_SECONDS=${{ vars.R2_PRESIGNED_URL_TTL_SECONDS }}
 
           GOOGLE_CLIENT_EMAIL=${{ secrets.GOOGLE_CLIENT_EMAIL }}
           GOOGLE_SHEET_ID=${{ secrets.GOOGLE_SHEET_ID }}
@@ -152,6 +156,8 @@ jobs:
 
           PAYSTACK_PUBLIC_KEY=${{ secrets.PAYSTACK_PUBLIC_KEY }}
           PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}
+          PAYSTACK_DOMAIN=live
+          PAYSTACK_TIMEOUT_MS=10000
           EOF
           printf '%s\n' "GOOGLE_PRIVATE_KEY=${google_private_key}" >> .env
           printf '%s\n' "RABBITMQ_URI=${rabbitmq_uri}" >> .env

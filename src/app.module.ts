@@ -28,12 +28,9 @@ import { ActionVerificationService } from './service/action-verification/action-
 import { EmailEvent } from './service/email/email-event.service';
 import { AuthController } from './controller/auth.controller';
 import { FileService } from './service/file/file.service';
-import { CloudinaryProvider } from './service/file/cloudinary.provider';
 import { FileController } from './controller/file.controller';
 import { UserController } from './controller/user.controller';
-import { StayAlive } from './service/stayAlive/stay-alive.service';
 import { HttpModule } from '@nestjs/axios';
-import { ScheduleModule } from '@nestjs/schedule';
 import { Company } from './model/entity/company.entity';
 import { CompanyService } from './service/company/company.service';
 import { CompanyController } from './controller/company.controller';
@@ -67,13 +64,26 @@ import { AdminPropertyController } from './controller/admin-property.controller'
 import { AdminPackageController } from './controller/admin-package.controller';
 import { Order } from './model/entity/order.entity';
 import { Transaction } from './model/entity/transaction.entity';
+import { WebhookEvent } from './model/entity/webhook-event.entity';
 import { VerificationPackage } from './model/entity/verification-package.entity';
 import { VerificationPackageService } from './service/verification-package/verification-package.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthController } from './controller/health.controller';
+import { FILE_STORAGE } from './service/file/storage/file-storage.constants';
+import { R2StorageService } from './service/file/storage/r2-storage.service';
+import { PaymentVerificationEventService } from './service/payment/payment-verification-event.service';
+import { WebhookService } from './service/webhook/webhook.service';
+import { WebhookEventStoreService } from './service/webhook/webhook-event-store.service';
+import { PropertyVerificationPaymentHandler } from './service/payment/handler/property-verification-payment.handler';
+import { PaymentVerificationHandlerRegistry } from './service/payment/handler/payment-verification-handler.registry';
+import { PaystackService } from './service/payment/paystack/paystack.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { VerificationPaymentService } from './service/payment/verification-payment.service';
+import { PaymentReconciliationService } from './service/payment/payment-reconciliation.service';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -197,10 +207,10 @@ import { HealthController } from './controller/health.controller';
       PropertyVerification,
       Order,
       Transaction,
+      WebhookEvent,
       VerificationPackage,
     ]),
     HttpModule,
-    ScheduleModule.forRoot({}),
   ],
   controllers: [
     AuthController,
@@ -239,9 +249,10 @@ import { HealthController } from './controller/health.controller';
     ActionVerificationService,
     EmailEvent,
     FileService,
-    CloudinaryProvider,
-    FileService,
-    StayAlive,
+    {
+      provide: FILE_STORAGE,
+      useClass: R2StorageService,
+    },
     CompanyService,
     PropertyService,
     PropertyHelperService,
@@ -255,6 +266,14 @@ import { HealthController } from './controller/health.controller';
     PropertyVerificationService,
     OrderService,
     TransactionService,
+    VerificationPaymentService,
+    PaystackService,
+    PaymentVerificationEventService,
+    PaymentReconciliationService,
+    WebhookService,
+    WebhookEventStoreService,
+    PropertyVerificationPaymentHandler,
+    PaymentVerificationHandlerRegistry,
     VerificationPackageService,
   ],
   exports: [RbacService],

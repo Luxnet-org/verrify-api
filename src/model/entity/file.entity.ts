@@ -1,22 +1,56 @@
 import { Auditable } from '../../utility/autitable.entity';
-import { Entity, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  OneToOne,
+  JoinColumn,
+  ManyToOne,
+  Index,
+} from 'typeorm';
 import { FileType } from '../enum/file-type.enum';
 import { User } from './user.entity';
 import { Company } from './company.entity';
 import { Property } from './property.entity';
 import { Article } from './article.entity';
 import { PropertyVerification } from './property-verification.entity';
+import { StorageProvider } from '../enum/storage-provider.enum';
 
 @Entity('file')
+@Index('IDX_file_r2_bucket_object_key', ['bucket', 'objectKey'], {
+  unique: true,
+  where: '"bucket" IS NOT NULL AND "objectKey" IS NOT NULL',
+})
 export class FileEntity extends Auditable {
   @Column({ type: 'enum', enum: FileType })
   fileType: FileType;
 
-  @Column({ type: 'character varying', unique: true })
-  url: string;
+  @Column({ type: 'character varying', unique: true, nullable: true })
+  url: string | null;
 
   @Column({ type: 'character varying' })
   fileName: string;
+
+  @Column({
+    type: 'enum',
+    enum: StorageProvider,
+    default: StorageProvider.CLOUDINARY,
+  })
+  storageProvider: StorageProvider;
+
+  @Column({ type: 'character varying', nullable: true })
+  bucket: string | null;
+
+  @Column({ type: 'character varying', nullable: true })
+  objectKey: string | null;
+
+  @Column({ type: 'character varying', nullable: true })
+  originalFileName: string | null;
+
+  @Column({ type: 'character varying', nullable: true })
+  mimeType: string | null;
+
+  @Column({ type: 'integer', nullable: true })
+  size: number | null;
 
   @OneToOne(() => User, (user) => user.profileImage)
   @JoinColumn()

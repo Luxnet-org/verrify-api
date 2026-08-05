@@ -305,11 +305,13 @@ export function propertyRejectedTemplate(ctx: Record<string, any>): string {
 }
 
 // ─── 10. Verification Pipeline Update ────────────────────────────────────────
-export function verificationPipelineUpdateTemplate(ctx: Record<string, any>): string {
+export function verificationPipelineUpdateTemplate(
+  ctx: Record<string, any>,
+): string {
   const firstName = escapeHtml(ctx.firstName || 'User');
   const message = escapeHtml(ctx.message || '');
   const comments = ctx.comments ? escapeHtml(ctx.comments) : null;
-  const attachments = ctx.attachments as Array<{ path?: string; filename?: string }> | undefined;
+  const attachmentsOmitted = Boolean(ctx.attachmentsOmitted);
 
   let commentsHtml = '';
   if (comments) {
@@ -320,20 +322,12 @@ export function verificationPipelineUpdateTemplate(ctx: Record<string, any>): st
     </div>`;
   }
 
-  let attachmentsHtml = '';
-  if (attachments && attachments.length > 0) {
-    const listItems = attachments
-      .map(
-        (f) =>
-          `<li><a href="${escapeHtml(f.path || '#')}" target="_blank" style="color:#2563EB;text-decoration:underline;">${escapeHtml(f.filename || 'View Document')}</a></li>`,
-      )
-      .join('');
-    attachmentsHtml = `
+  const attachmentsHtml = attachmentsOmitted
+    ? `
     <div style="margin:20px auto;max-width:500px;">
-      <p style="font-weight:bold;color:#374151;font-size:14px;">Attached Documents:</p>
-      <ul style="padding-left:20px;color:#4B5563;font-size:14px;">${listItems}</ul>
-    </div>`;
-  }
+      <p style="color:#4B5563;font-size:14px;">The documents were too large to attach to this email. Please view them from your dashboard.</p>
+    </div>`
+    : '';
 
   return wrapInLayout(`
     <h1>Property Verification Update</h1>
@@ -400,7 +394,10 @@ export function paymentReceiptTemplate(ctx: Record<string, any>): string {
 /**
  * Maps template name (as used by the SMTP/Pug path) to an HTML template function.
  */
-export const TEMPLATE_MAP: Record<string, (ctx: Record<string, any>) => string> = {
+export const TEMPLATE_MAP: Record<
+  string,
+  (ctx: Record<string, any>) => string
+> = {
   'account-verification-email-template': accountVerificationTemplate,
   'signup-confirmation-email-template': signupConfirmationTemplate,
   'reset-password-email-template': resetPasswordTemplate,
@@ -410,6 +407,7 @@ export const TEMPLATE_MAP: Record<string, (ctx: Record<string, any>) => string> 
   'company-rejected-email-template': companyRejectedTemplate,
   'property-verified-email-template': propertyVerifiedTemplate,
   'property-rejected-email-template': propertyRejectedTemplate,
-  'verification-pipeline-update-email-template': verificationPipelineUpdateTemplate,
+  'verification-pipeline-update-email-template':
+    verificationPipelineUpdateTemplate,
   'payment-receipt-email-template': paymentReceiptTemplate,
 };

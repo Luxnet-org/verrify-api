@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
   ValidateNested,
 } from 'class-validator';
 import { Polygon } from 'geojson';
@@ -54,28 +55,32 @@ export class UpdatePropertyRequestDto {
   propertyType: PropertyType;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
-  certificationOfOccupancy: string;
+  certificationOfOccupancyFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
-  contractOfSale: string;
+  contractOfSaleFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
-  surveyPlan: string;
+  surveyPlanFileId: string;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
-  letterOfIntent: string;
+  letterOfIntentFileId: string;
 
   @IsBoolean()
   @IsOptional()
@@ -91,10 +96,11 @@ export class UpdatePropertyRequestDto {
   isPublic?: boolean;
 
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
   @ApiPropertyOptional()
-  deedOfConveyance: string;
+  deedOfConveyanceFileId: string;
 
   @IsArray()
   @ValidateNested({ each: true })

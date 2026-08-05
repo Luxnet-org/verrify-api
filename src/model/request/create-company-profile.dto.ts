@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class CompanyProfileRequestDto {
@@ -35,15 +36,17 @@ export class CompanyProfileRequestDto {
 
   @ApiPropertyOptional()
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
-  proofOfAddress: string;
+  proofOfAddressFileId: string;
 
   @ApiPropertyOptional()
   @IsString()
+  @IsUUID()
   @IsNotEmpty()
   @IsOptional()
-  profileImage: string;
+  profileImageId: string;
 
   @ApiPropertyOptional()
   @IsString()

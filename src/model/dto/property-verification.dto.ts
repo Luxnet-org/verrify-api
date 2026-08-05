@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DateDto } from '../../utility/date.dto';
+import { DateDto } from './date.dto';
 import { VerificationStageStatus } from '../enum/verification-stage-status.enum';
 import { PropertyDto } from './property.dto';
 import { UserDto } from './user.dto';

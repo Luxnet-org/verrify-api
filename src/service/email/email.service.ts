@@ -6,6 +6,10 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from 'src/config-module/configuration';
 import { ResendEmailService } from './resend-email.service';
 import { TEMPLATE_MAP } from './html-templates';
+import { FileService } from '../file/file.service';
+
+const MAX_EMAIL_SIZE_BYTES = 40_000_000;
+const EMAIL_BODY_ALLOWANCE_BYTES = 512 * 1024;
 
 @Injectable()
 export class EmailService {
@@ -18,8 +22,10 @@ export class EmailService {
     @Optional() private readonly mailerService: MailerService,
     private readonly configService: ConfigService<ConfigInterface>,
     private readonly resendEmailService: ResendEmailService,
+    private readonly fileService: FileService,
   ) {
-    this.provider = this.configService.get('email.provider', { infer: true }) || 'smtp';
+    this.provider =
+      this.configService.get('email.provider', { infer: true }) || 'smtp';
     this.logger.log(`Email provider: ${this.provider}`, EmailService.name);
   }
 
@@ -33,9 +39,25 @@ export class EmailService {
     fromEmail?: string,
   ): Promise<void> {
     if (this.provider === 'resend') {
-      await this.sendViaResend(to, subject, template, context, attachments, fromName, fromEmail);
+      await this.sendViaResend(
+        to,
+        subject,
+        template,
+        context,
+        attachments,
+        fromName,
+        fromEmail,
+      );
     } else {
-      await this.sendViaSmtp(to, subject, template, context, attachments, fromName, fromEmail);
+      await this.sendViaSmtp(
+        to,
+        subject,
+        template,
+        context,
+        attachments,
+        fromName,
+        fromEmail,
+      );
     }
   }
 
@@ -55,7 +77,8 @@ export class EmailService {
     }
 
     const senderName = fromName || 'Verrify';
-    const senderEmailStr = fromEmail || this.configService.get('email.sender', { infer: true });
+    const senderEmailStr =
+      fromEmail || this.configService.get('email.sender', { infer: true });
     const fromString = `"${senderName}" <${senderEmailStr}>`;
 
     const sendMailParams: ISendMailOptions = {
@@ -102,7 +125,14 @@ export class EmailService {
       ...(a.content ? { content: a.content } : {}),
     }));
 
-    await this.resendEmailService.sendMail(to, subject, html, resendAttachments, fromName, fromEmail);
+    await this.resendEmailService.sendMail(
+      to,
+      subject,
+      html,
+      resendAttachments,
+      fromName,
+      fromEmail,
+    );
   }
 
   async sendAccountVerificationMail(emailRequest: EmailRequest): Promise<void> {
@@ -143,7 +173,7 @@ export class EmailService {
       'contact-respond-email-template',
       emailRequest.context,
       undefined,
-      "Ifunanya from Verrify"
+      'Ifunanya from Verrify',
     );
   }
 
@@ -192,14 +222,62 @@ export class EmailService {
     );
   }
 
-  async sendVerificationPipelineUpdateMail(emailRequest: EmailRequest): Promise<void> {
+  async sendVerificationPipelineUpdateMail(
+    emailRequest: EmailRequest,
+  ): Promise<void> {
+    const { attachments, omitted } = await this.resolveFileAttachments(
+      emailRequest.attachmentFileIds || [],
+    );
+    emailRequest.context.attachmentsOmitted = omitted;
+
     await this.sendMail(
       emailRequest.to,
       emailRequest.subject || 'Property Verification Update',
       emailRequest.template || 'verification-pipeline-update-email-template',
       emailRequest.context,
-      emailRequest.attachments,
+      attachments,
     );
+  }
+
+  private async resolveFileAttachments(fileIds: string[]): Promise<{
+    attachments: Array<{ filename: string; path: string }> | undefined;
+    omitted: boolean;
+  }> {
+    if (fileIds.length === 0) {
+      return { attachments: undefined, omitted: false };
+    }
+
+    const files = await this.fileService.findFilesByIds(fileIds);
+    if (files.some((file) => file.size === null)) {
+      this.logger.warn(
+        'Email attachments omitted because one or more legacy files have unknown sizes',
+        EmailService.name,
+      );
+      return { attachments: undefined, omitted: true };
+    }
+
+    const encodedAttachmentBytes = files.reduce(
+      (total, file) => total + 4 * Math.ceil((file.size || 0) / 3),
+      0,
+    );
+    if (
+      encodedAttachmentBytes + EMAIL_BODY_ALLOWANCE_BYTES >
+      MAX_EMAIL_SIZE_BYTES
+    ) {
+      this.logger.warn(
+        'Email attachments omitted because the message would exceed 40 MB',
+        EmailService.name,
+      );
+      return { attachments: undefined, omitted: true };
+    }
+
+    const attachments = await Promise.all(
+      files.map(async (file) => ({
+        filename: file.originalFileName || file.fileName,
+        path: (await this.fileService.resolveAccessUrl(file)).url,
+      })),
+    );
+    return { attachments, omitted: false };
   }
 
   async sendPaymentReceiptMail(emailRequest: EmailRequest): Promise<void> {
