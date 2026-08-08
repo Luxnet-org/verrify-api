@@ -307,6 +307,10 @@ export class CompanyService {
         );
       }
 
+      if (phoneNumber) {
+        company.phoneNumber = phoneNumber;
+      }
+
       if (proofOfAddressFileId || address || name) {
         if (
           company.user.id === user.id &&
@@ -318,16 +322,12 @@ export class CompanyService {
               CompanyVerificationStatus.VERIFIED)
         ) {
           throw new BadRequestException(
-            'Cannot modify company profile during review',
+            'Cannot modify company profile during review or verified profile. Please contact support',
           );
         }
 
         if (name) {
           company.name = name;
-        }
-
-        if (phoneNumber) {
-          company.phoneNumber = phoneNumber;
         }
 
         if (address) {
