@@ -67,7 +67,13 @@ export class PropertyGetService {
         isSubProperty: searchQuery.isSubProperty,
         isPublic: searchQuery.isPublic,
       },
-      ['company', 'users', 'location'],
+      [
+        'company',
+        'company.profileImage',
+        'users',
+        'users.profileImage',
+        'location',
+      ],
     );
 
     const [properties, count] =

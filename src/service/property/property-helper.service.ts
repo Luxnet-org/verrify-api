@@ -269,7 +269,7 @@ export class PropertyHelperService {
             };
           })
         : null,
-      company: !property.isSubProperty
+      company: property.company
         ? {
             companyId: property.company.id,
             companyVerificationStatus:

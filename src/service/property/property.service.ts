@@ -174,7 +174,6 @@ export class PropertyService {
     userId: string,
     propertyRequest: CreateSubPropertyRequestDto,
   ): Promise<PropertyDto> {
-    const user: User = await this.userService.findById(userId, ['company']);
     const property: Property = await this.propertyGetService.findById(
       propertyId,
       ['company', 'location', 'company.user'],
@@ -240,7 +239,7 @@ export class PropertyService {
         propertyType: propertyRequest.propertyType,
         propertyVerificationStatus: PropertyVerificationStatus.NOT_VERIFIED,
         area: calcArea,
-        company: user.company,
+        company: property.company,
         parentProperty: property,
         users,
       });
@@ -308,7 +307,7 @@ export class PropertyService {
       }
 
       this.logger.log(
-        `Company: ${user.company.id} made a create sub-property request: ${newProperty.id}`,
+        `Company: ${property.company.id} made a create sub-property request: ${newProperty.id}`,
         PropertyService.name,
       );
 
