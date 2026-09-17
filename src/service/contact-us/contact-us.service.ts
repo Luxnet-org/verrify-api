@@ -1,15 +1,8 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MyLoggerService } from '../logger/my-logger.service';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from '../../config-module/configuration';
-import { JWT } from 'google-auth-library';
 import { SubscribeNewsletterRequestDto } from '../../model/request/subscribe-newsletter-request.dto';
-import { google } from 'googleapis';
-import { DateUtility } from '../../utility/date-utility';
 import { ContactUsRequestDto } from '../../model/request/contact-us-request.dto';
 import { EmailType } from '../../model/enum/email-type.enum';
 import { EmailEvent } from '../email/email-event.service';
@@ -26,7 +19,7 @@ export class ContactUsService {
     private readonly configService: ConfigService<ConfigInterface>,
     private readonly emailEventService: EmailEvent,
     private readonly contactEventService: ContactEventService,
-  ) { }
+  ) {}
 
   async subscribeRequest(
     request: SubscribeNewsletterRequestDto,
@@ -47,7 +40,7 @@ export class ContactUsService {
   async contactRequest(request: ContactUsRequestDto): Promise<string> {
     const { email, message, name, phone } = request;
 
-    const supportMail: string = this.configService.get('email.adminEmail', {
+    const supportMail: string[] = this.configService.get('email.adminEmail', {
       infer: true,
     })!;
 
