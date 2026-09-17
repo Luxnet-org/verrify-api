@@ -25,7 +25,7 @@ export interface ConfigInterface {
     port: number;
     requireTLS: boolean;
     sender: string;
-    adminEmail: string;
+    adminEmail: string[];
   };
   queue: {
     rabbitMQUri: string;
@@ -105,7 +105,24 @@ export const validationSchema = Joi.object({
   }),
   EMAIL_REQUIRE_TLS: Joi.boolean().truthy('true').falsy('false').optional(),
   EMAIL_SENDER: Joi.string().required(),
-  ADMIN_EMAIL: Joi.string().required(),
+  ADMIN_EMAIL: Joi.string()
+    .required()
+    .custom((value: string, helpers) => {
+      const emails: string[] = value.split(',').map((e) => e.trim());
+
+      const { error } = Joi.array()
+        .items(Joi.string().email())
+        .validate(emails);
+
+      if (error) {
+        return helpers.message({
+          custom:
+            'ADMIN_EMAIL must be a comma-separated list of valid email addresses',
+        });
+      }
+
+      return value;
+    }),
 
   RABBITMQ_URI: Joi.string().required(),
 
@@ -175,7 +192,7 @@ export const configuration = (): ConfigInterface => ({
       getBooleanEnv(process.env.EMAIL_REQUIRE_TLS) ??
       process.env.APP_PROFILE === 'prod',
     sender: process.env.EMAIL_SENDER!,
-    adminEmail: process.env.ADMIN_EMAIL!,
+    adminEmail: process.env.ADMIN_EMAIL!.split(',').map((e) => e.trim()),
   },
   queue: {
     rabbitMQUri: process.env.RABBITMQ_URI!,
