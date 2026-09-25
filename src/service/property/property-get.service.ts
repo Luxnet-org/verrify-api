@@ -547,8 +547,16 @@ export class PropertyGetService {
     userId: string,
     query: NearbyQueryDto,
   ): Promise<PaginationAndSortingResult<PropertyLookupResponseDto>> {
-    const { latitude, longitude, radiusKm, limit, page, status, companyId } =
-      query;
+    const {
+      latitude,
+      longitude,
+      radiusKm,
+      limit,
+      page,
+      propertyType,
+      status,
+      companyId,
+    } = query;
 
     const user: User = await this.userService.findById(userId);
     const isUser = user.role === UserRole.USER;
@@ -583,6 +591,13 @@ export class PropertyGetService {
       queryBuilder = queryBuilder.andWhere('company.id = :companyId', {
         companyId,
       });
+    }
+
+    if (propertyType) {
+      queryBuilder = queryBuilder.andWhere(
+        'property.propertyType = :propertyType',
+        { propertyType },
+      );
     }
 
     if (isUser && !isCompanyScoped) {
