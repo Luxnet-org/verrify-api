@@ -12,7 +12,7 @@ import {
   PropertyVersionValidationOptions,
   VersionDocumentSlot,
 } from '../../../model/data/property-version.data';
-import { OtherDocumentRequestDto } from '../../../model/request/create-property-request.dto';
+import { FileAttachmentRequestDto } from '../../../model/request/file-attachment-request.dto';
 import { UpdatePropertyRequestDto } from '../../../model/request/update-property-request.dto';
 import { FileEntity } from '../../../model/entity/file.entity';
 import { LocationEntity } from '../../../model/entity/location.entity';
@@ -379,7 +379,7 @@ export class PropertyVersionService {
 
   private async replaceVersionOtherDocuments(
     version: PropertyVersion,
-    documents: OtherDocumentRequestDto[],
+    documents: FileAttachmentRequestDto[],
     manager: EntityManager,
   ): Promise<void> {
     this.propertyHelper.validateOtherDocuments(documents);
@@ -518,7 +518,7 @@ export class PropertyVersionService {
 
   private mapExistingOtherDocuments(
     documents?: FileEntity[],
-  ): OtherDocumentRequestDto[] {
+  ): FileAttachmentRequestDto[] {
     return (documents || []).map((document) => ({
       label: document.otherDocumentLabel as string,
       fileId: document.id,

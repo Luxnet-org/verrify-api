@@ -3,8 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as turf from '@turf/turf';
 import { Polygon } from 'geojson';
 import { EntityManager, Repository } from 'typeorm';
-import { OtherDocumentRequestDto } from '../../model/request/create-property-request.dto';
-import { FileEntity } from '../../model/entity/file.entity';
+import { FileAttachmentRequestDto } from '../../model/request/file-attachment-request.dto';
 import { LocationEntity } from '../../model/entity/location.entity';
 import { Property } from '../../model/entity/property.entity';
 import { PropertyVerificationStatus } from '../../model/enum/property-verification-status.enum';
@@ -23,12 +22,10 @@ export class PropertyHelperService {
 
   async replaceOtherDocuments(
     property: Property,
-    otherDocuments: OtherDocumentRequestDto[],
+    otherDocuments: FileAttachmentRequestDto[],
     manager: EntityManager,
   ): Promise<void> {
     this.validateOtherDocuments(otherDocuments);
-
-    const fileRepository = manager.getRepository(FileEntity);
 
     if (property.otherDocuments?.length) {
       await Promise.all(
@@ -50,20 +47,19 @@ export class PropertyHelperService {
     }
 
     property.otherDocuments = await Promise.all(
-      otherDocuments.map(async (document) => {
-        const linkedDocument = await this.fileService.updateWithFileId(
+      otherDocuments.map((document) =>
+        this.fileService.updateWithFileId(
           document.fileId,
           property,
           FileType.PROPERTY_OTHER_DOCUMENT,
           manager,
-        );
-        linkedDocument.otherDocumentLabel = document.label.trim();
-        return fileRepository.save(linkedDocument);
-      }),
+          document.label,
+        ),
+      ),
     );
   }
 
-  validateOtherDocuments(otherDocuments: OtherDocumentRequestDto[]): void {
+  validateOtherDocuments(otherDocuments: FileAttachmentRequestDto[]): void {
     const labels = new Set<string>();
     const fileIds = new Set<string>();
 

@@ -1,3 +1,4 @@
+import { FileAttachmentResponseDto } from '../response/file-attachment-response.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { DateDto } from './date.dto';
 import { VerificationStageStatus } from '../enum/verification-stage-status.enum';
@@ -16,11 +17,17 @@ export class PropertyVerificationDto extends DateDto {
   @ApiPropertyOptional()
   adminComments: string | null;
 
+  @ApiProperty({ type: 'object', additionalProperties: true, nullable: true })
+  additionalInformation: Record<string, unknown> | null;
+
   @ApiPropertyOptional()
   reviewedAt: Date | null;
 
   @ApiProperty({ type: [String] })
   verificationFiles: string[];
+
+  @ApiProperty({ type: [FileAttachmentResponseDto] })
+  fileAttachments: FileAttachmentResponseDto[];
 
   @ApiProperty({ type: [String] })
   adminStageFiles: string[];

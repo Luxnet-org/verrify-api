@@ -13,7 +13,7 @@ import { Polygon } from 'geojson';
 import { PropertyType } from '../enum/property-type.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { OtherDocumentRequestDto } from './create-property-request.dto';
+import { FileAttachmentRequestDto } from './file-attachment-request.dto';
 
 export class UpdatePropertyRequestDto {
   @IsString()
@@ -104,14 +104,14 @@ export class UpdatePropertyRequestDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => OtherDocumentRequestDto)
+  @Type(() => FileAttachmentRequestDto)
   @IsOptional()
   @ApiPropertyOptional({
-    type: [OtherDocumentRequestDto],
+    type: [FileAttachmentRequestDto],
     description:
       'Other property documents. Omitted leaves unchanged, empty array clears, provided array replaces.',
   })
-  otherDocuments?: OtherDocumentRequestDto[];
+  otherDocuments?: FileAttachmentRequestDto[];
 
   @IsArray()
   @IsString({ each: true })

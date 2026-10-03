@@ -37,6 +37,9 @@ export class PropertyVerification extends Auditable {
   @Column({ type: 'simple-json', nullable: true })
   adminComments: string | null;
 
+  @Column({ type: 'jsonb', nullable: true })
+  additionalInformation: Record<string, unknown> | null;
+
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn()
   reviewUser: User | null;

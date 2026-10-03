@@ -82,6 +82,7 @@ export class FileService {
     entity: T,
     fileType: FileType,
     manager?: EntityManager,
+    label?: string,
   ): Promise<FileEntity> {
     const repo = manager
       ? manager.getRepository(FileEntity)
@@ -108,7 +109,13 @@ export class FileService {
       throw new NotFoundException('File not found');
     }
 
-    findFile = await this.updateFile(findFile, entity, fileType, manager);
+    findFile = await this.updateFile(
+      findFile,
+      entity,
+      fileType,
+      manager,
+      label,
+    );
 
     this.logger.log('File updated with file ID successfully', FileService.name);
     return findFile;
@@ -119,12 +126,16 @@ export class FileService {
     entity: T,
     fileType: FileType,
     manager?: EntityManager,
+    label?: string,
   ): Promise<FileEntity> {
     if (fileEntity.fileType !== fileType) {
       throw new BadRequestException('File type do not match');
     }
 
     if (entity) {
+      if (label !== undefined) {
+        fileEntity.otherDocumentLabel = label.trim();
+      }
       switch (fileType) {
         case FileType.PROFILE_PICTURE:
           if (fileEntity.user) {
@@ -258,6 +269,7 @@ export class FileService {
     const repo = manager
       ? manager.getRepository(FileEntity)
       : this.fileRepository;
+
     const updatedFile: FileEntity = await repo.save(fileEntity);
 
     this.logger.log('File updated successfully', FileService.name);
