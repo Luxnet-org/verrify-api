@@ -123,6 +123,7 @@ export class PropertyVerificationService {
         property: property,
         user: user,
         stage: VerificationStageStatus.INITIATED,
+        additionalInformation: dto.additionalInformation ?? null,
         stageHistory: [
           { stage: VerificationStageStatus.INITIATED, completedAt: new Date() },
         ],
@@ -133,14 +134,15 @@ export class PropertyVerificationService {
         verification,
       );
 
-      if (dto.verificationFileIds && dto.verificationFileIds.length > 0) {
+      if (dto.fileAttachments && dto.fileAttachments.length > 0) {
         await Promise.all(
-          dto.verificationFileIds.map((fileId) =>
+          dto.fileAttachments.map((attachment) =>
             this.fileService.updateWithFileId(
-              fileId,
+              attachment.fileId,
               savedVerification,
               FileType.VERIFICATION_DOCUMENT,
               manager,
+              attachment.label,
             ),
           ),
         );
@@ -285,19 +287,24 @@ export class PropertyVerificationService {
         }
       }
 
+      if (dto.additionalInformation !== undefined) {
+        verification.additionalInformation = dto.additionalInformation;
+      }
+
       const savedVerification = await manager.save(
         PropertyVerification,
         verification,
       );
 
-      if (dto.verificationFileIds && dto.verificationFileIds.length > 0) {
+      if (dto.fileAttachments && dto.fileAttachments.length > 0) {
         await Promise.all(
-          dto.verificationFileIds.map((fileId) =>
+          dto.fileAttachments.map((attachment) =>
             this.fileService.updateWithFileId(
-              fileId,
+              attachment.fileId,
               savedVerification,
               FileType.VERIFICATION_DOCUMENT,
               manager,
+              attachment.label,
             ),
           ),
         );
@@ -773,8 +780,16 @@ export class PropertyVerificationService {
       stage: verification.stage,
       caseId: verification.caseId,
       adminComments: verification.adminComments,
+      additionalInformation: verification.additionalInformation ?? null,
       reviewedAt: verification.reviewedAt,
       verificationFiles,
+      fileAttachments: (verification.verificationFiles || []).map(
+        (file, index) => ({
+          fileId: file.id,
+          label: file.otherDocumentLabel,
+          url: verificationFiles[index],
+        }),
+      ),
       adminStageFiles,
       property,
       user: verification.user

@@ -1,7 +1,16 @@
 import { PropertyType } from '../enum/property-type.enum';
-import { IsEnum, IsOptional, IsString, IsArray, IsUUID } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsObject,
+  IsString,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
 import { Polygon } from 'geojson';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { FileAttachmentRequestDto } from './file-attachment-request.dto';
 
 export class UpdatePropertyVerificationDto {
   @IsOptional()
@@ -57,10 +66,22 @@ export class UpdatePropertyVerificationDto {
 
   @IsOptional()
   @IsArray()
-  @IsUUID(undefined, { each: true })
+  @ValidateNested({ each: true })
+  @Type(() => FileAttachmentRequestDto)
   @ApiPropertyOptional({
-    type: [String],
-    description: 'Optional array of uploaded file IDs submitted by the user',
+    description: 'Uploaded verification files with document labels',
+    type: [FileAttachmentRequestDto],
   })
-  verificationFileIds?: string[];
+  fileAttachments?: FileAttachmentRequestDto[];
+
+  @IsOptional()
+  @IsObject()
+  @ApiPropertyOptional({
+    type: 'object',
+    additionalProperties: true,
+    nullable: true,
+    description:
+      'Dynamic verification information. Replaces the existing object when supplied; null clears it.',
+  })
+  additionalInformation?: Record<string, unknown> | null;
 }

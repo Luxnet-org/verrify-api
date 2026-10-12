@@ -11,8 +11,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { rawBody: true });
 
   const expressApp = app.getHttpAdapter().getInstance() as Express;
-  // Caddy is the only HTTP proxy. Docker bridge/NAT does not add another
-  // forwarded-address entry, so one trusted hop resolves request.ip correctly.
+  // Trust the immediate ingress proxy. Review this setting before adding
+  // another proxy to the Railway custom-domain path.
   expressApp.set('trust proxy', 1);
 
   const { httpAdapter } = app.get(HttpAdapterHost);
@@ -46,6 +46,7 @@ async function bootstrap() {
   document.security = [{ 'access-token': [] }];
   SwaggerModule.setup(`/docs`, app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  app.enableShutdownHooks();
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 void bootstrap();

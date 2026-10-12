@@ -11,19 +11,19 @@
 Verrify API is the core backend service handling authentication, property and company verifications, payment processing, file management, and email notifications. 
 
 ### Key Technologies 🛠️
-*   **Framework:** [NestJS](https://nestjs.com/) (v11)
+*   **Framework:** [NestJS](https://nestjs.com/) (v12.1+)
 *   **Language:** [TypeScript](https://www.typescriptlang.org/)
 *   **Database ORM:** [TypeORM](https://typeorm.io/) with PostgreSQL
 *   **Authentication:** JWT, Role-Based Access Control (RBAC), and Google Auth
 *   **Queueing:** RabbitMQ
 *   **Emails:** NestJS Mailer with Pug templating
 *   **Payments:** Paystack Integrations & Webhooks
-*   **File Storage:** Cloudflare R2
+*   **File Storage:** Cloudflare R2 using native `@nestjs/storage` disks
 *   **API Documentation:** Swagger / OpenAPI
 
 ## Installation
 
-Ensure you have Node.js and npm installed.
+Use Node.js 24.21.0 (`nvm use`) and npm. Install the locked dependency versions with `npm ci`.
 
 ```bash
 # Clone the repository and install dependencies
@@ -32,7 +32,7 @@ $ npm install
 
 ## Environment Variables
 
-Create a `.env` file in the root directory based on `.env.example` (if available) with the following essential keys:
+Create a `.env` file in the root directory; [.env.railway.example](.env.railway.example) lists all required settings. For local development, use local database and RabbitMQ values with the following essential keys:
 
 ```md
 # Application
@@ -91,7 +91,7 @@ $ npm run start
 # watch mode (hot-reloading)
 $ npm run start:dev
 
-# production mode (runs migrations first)
+# production mode (starts the compiled API)
 $ npm run start:prod
 ```
 
@@ -170,3 +170,9 @@ frontend needs cross-origin `fetch`, canvas, or similar access.
 ## License
 
 This project is UNLICENSED and proprietary to the Verrify organization.
+
+## Railway deployment
+
+Follow [the Railway setup and exact backup restore guide](docs/RAILWAY_DEPLOYMENT.md). Railway builds the Dockerfile from `master` after GitHub checks pass and applies pending migrations in its pre-deploy step. `start:prod` only starts the API. PostgreSQL/PostGIS and a fresh RabbitMQ service run on Railway; file storage stays on the existing R2 buckets.
+
+CI checks migration-changed TypeScript files for lint, plus existing unit tests and the build. New regression and HTTP tests are deferred. The existing repository-wide lint backlog is deferred.

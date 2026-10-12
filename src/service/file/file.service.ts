@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -17,22 +16,30 @@ import { Property } from '../../model/entity/property.entity';
 import { Article } from '../../model/entity/article.entity';
 import { PropertyVerification } from '../../model/entity/property-verification.entity';
 import { StorageProvider } from '../../model/enum/storage-provider.enum';
-import {
-  FILE_STORAGE,
-  isPublicFileType,
-} from './storage/file-storage.constants';
-import { FileStorage, SignedFileUrl } from './storage/file-storage.interface';
+import { isPublicFileType } from './storage/file-storage.constants';
+import { InjectDisk, StorageDisk } from '@nestjs/storage';
+import { ConfigService } from '@nestjs/config';
+import { ConfigInterface } from '../../config-module/configuration';
+import { randomUUID } from 'node:crypto';
+import { extname } from 'node:path';
 
 @Injectable()
 export class FileService {
   private readonly logger: MyLoggerService = new MyLoggerService();
 
+  private readonly r2: ConfigInterface['r2'];
+
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
-    @Inject(FILE_STORAGE)
-    private readonly fileStorage: FileStorage,
-  ) {}
+    @InjectDisk('r2-public')
+    private readonly publicDisk: StorageDisk,
+    @InjectDisk('r2-private')
+    private readonly privateDisk: StorageDisk,
+    configService: ConfigService<ConfigInterface>,
+  ) {
+    this.r2 = configService.getOrThrow('r2', { infer: true });
+  }
 
   async uploadFileService(
     fileType: FileType,
@@ -82,6 +89,7 @@ export class FileService {
     entity: T,
     fileType: FileType,
     manager?: EntityManager,
+    label?: string,
   ): Promise<FileEntity> {
     const repo = manager
       ? manager.getRepository(FileEntity)
@@ -108,7 +116,13 @@ export class FileService {
       throw new NotFoundException('File not found');
     }
 
-    findFile = await this.updateFile(findFile, entity, fileType, manager);
+    findFile = await this.updateFile(
+      findFile,
+      entity,
+      fileType,
+      manager,
+      label,
+    );
 
     this.logger.log('File updated with file ID successfully', FileService.name);
     return findFile;
@@ -119,12 +133,16 @@ export class FileService {
     entity: T,
     fileType: FileType,
     manager?: EntityManager,
+    label?: string,
   ): Promise<FileEntity> {
     if (fileEntity.fileType !== fileType) {
       throw new BadRequestException('File type do not match');
     }
 
     if (entity) {
+      if (label !== undefined) {
+        fileEntity.otherDocumentLabel = label.trim();
+      }
       switch (fileType) {
         case FileType.PROFILE_PICTURE:
           if (fileEntity.user) {
@@ -258,6 +276,7 @@ export class FileService {
     const repo = manager
       ? manager.getRepository(FileEntity)
       : this.fileRepository;
+
     const updatedFile: FileEntity = await repo.save(fileEntity);
 
     this.logger.log('File updated successfully', FileService.name);
@@ -272,6 +291,7 @@ export class FileService {
     });
     const filesById = new Map(files.map((file) => [file.id, file]));
     const missingFileId = fileIds.find((fileId) => !filesById.has(fileId));
+
     if (missingFileId) {
       throw new NotFoundException(`File with id ${missingFileId} not found`);
     }
@@ -292,7 +312,9 @@ export class FileService {
     );
   }
 
-  async resolveAccessUrl(file: FileEntity): Promise<SignedFileUrl> {
+  async resolveAccessUrl(
+    file: FileEntity,
+  ): Promise<{ url: string; expiresAt: Date | null }> {
     if (file.storageProvider === StorageProvider.CLOUDINARY) {
       if (!file.url) {
         throw new InternalServerErrorException(
@@ -311,39 +333,72 @@ export class FileService {
       return { url: file.url, expiresAt: null };
     }
 
-    if (!file.bucket || !file.objectKey) {
+    if (
+      !file.bucket ||
+      !file.objectKey ||
+      file.bucket !== this.r2.privateBucket
+    ) {
       throw new InternalServerErrorException(
         `Private R2 file ${file.id} is missing storage metadata`,
       );
     }
 
-    return this.fileStorage.createSignedDownloadUrl(
-      file.bucket,
-      file.objectKey,
-      file.originalFileName,
-    );
+    const expiresIn = this.r2.signedUrlTtlSeconds * 1000;
+    const expiresAt = new Date(Date.now() + expiresIn);
+    const url = await this.privateDisk.signedUrl(file.objectKey, {
+      expiresIn,
+      filename: file.originalFileName ?? undefined,
+      disposition: 'inline',
+    });
+    return { url, expiresAt };
   }
 
   private async uploadFileToStorage(
     file: Express.Multer.File,
     fileType: FileType,
   ): Promise<FileEntity> {
-    const storedFile = await this.fileStorage.upload(
-      file,
-      fileType,
-      isPublicFileType(fileType),
-    );
+    const isPublic = isPublicFileType(fileType);
+    const disk = isPublic ? this.publicDisk : this.privateDisk;
+    const objectKey = this.createObjectKey(fileType, file.originalname);
+
+    await disk.put(objectKey, file.buffer, {
+      contentType: file.mimetype,
+      contentLength: file.size,
+      contentDisposition: `inline; filename*=UTF-8''${encodeURIComponent(file.originalname)}`,
+      cacheControl: isPublic
+        ? 'public, max-age=31536000, immutable'
+        : 'private, no-store',
+      metadata: {
+        originalfilename: encodeURIComponent(file.originalname),
+        filetype: fileType,
+      },
+    });
 
     this.logger.log('File uploaded to R2 successfully', FileService.name);
     return this.fileRepository.create({
-      fileName: storedFile.objectKey,
-      url: storedFile.url,
-      storageProvider: storedFile.storageProvider,
-      bucket: storedFile.bucket,
-      objectKey: storedFile.objectKey,
+      fileName: objectKey,
+      url: isPublic ? disk.url(objectKey) : null,
+      storageProvider: StorageProvider.CLOUDFLARE_R2,
+      bucket: isPublic ? this.r2.publicBucket : this.r2.privateBucket,
+      objectKey: objectKey,
       originalFileName: file.originalname,
       mimeType: file.mimetype,
       size: file.size,
     });
+  }
+
+  private createObjectKey(
+    fileType: FileType,
+    originalFileName: string,
+  ): string {
+    const now = new Date();
+    const extension = extname(originalFileName).toLowerCase();
+    const safeExtension = /^\.[a-z0-9]{1,10}$/.test(extension) ? extension : '';
+    return [
+      fileType.toLowerCase().replaceAll('_', '-'),
+      now.getUTCFullYear().toString(),
+      String(now.getUTCMonth() + 1).padStart(2, '0'),
+      `${randomUUID()}${safeExtension}`,
+    ].join('/');
   }
 }

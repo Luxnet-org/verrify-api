@@ -56,3 +56,13 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /docs/superpowers
+
+# Local database backup archives
+*.sql
+*.sql.gz
+*.dump
+*.dump.gz
+*.backup
+*.backup.gz
+
+*.tsbuildinfo

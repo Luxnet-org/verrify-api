@@ -13,7 +13,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Polygon } from 'geojson';
 import { PropertyType } from '../enum/property-type.enum';
 import { Type } from 'class-transformer';
-import { OtherDocumentRequestDto } from './create-property-request.dto';
+import { FileAttachmentRequestDto } from './file-attachment-request.dto';
 
 export class CreateSubPropertyRequestDto {
   @IsString()
@@ -80,13 +80,13 @@ export class CreateSubPropertyRequestDto {
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => OtherDocumentRequestDto)
+  @Type(() => FileAttachmentRequestDto)
   @IsOptional()
   @ApiPropertyOptional({
-    type: [OtherDocumentRequestDto],
+    type: [FileAttachmentRequestDto],
     description: 'Other property documents with custom labels',
   })
-  otherDocuments?: OtherDocumentRequestDto[];
+  otherDocuments?: FileAttachmentRequestDto[];
 
   @IsBoolean()
   @IsNotEmpty()

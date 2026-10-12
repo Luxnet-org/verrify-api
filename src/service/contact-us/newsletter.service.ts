@@ -3,10 +3,9 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { JWT } from 'google-auth-library';
 import { ConfigService } from '@nestjs/config';
 import { ConfigInterface } from '../../config-module/configuration';
-import { google } from 'googleapis';
+import { google, sheets_v4 } from 'googleapis';
 import { SubscribeNewsletterRequestDto } from '../../model/request/subscribe-newsletter-request.dto';
 import { DateUtility } from '../../utility/date-utility';
 import { MyLoggerService } from '../logger/my-logger.service';
@@ -16,8 +15,8 @@ export class NewsletterService {
   private readonly logger: MyLoggerService = new MyLoggerService(
     NewsletterService.name,
   );
-  private sheets;
-  private auth: JWT;
+  private sheets: sheets_v4.Sheets;
+  private auth: InstanceType<typeof google.auth.JWT>;
 
   constructor(private readonly configService: ConfigService<ConfigInterface>) {
     this.initializeGoogleSheets();
@@ -25,7 +24,7 @@ export class NewsletterService {
 
   private initializeGoogleSheets() {
     // Initialize auth with service account
-    this.auth = new JWT({
+    this.auth = new google.auth.JWT({
       email: this.configService.get('google.clientMail', {
         infer: true,
       }),
@@ -100,7 +99,7 @@ export class NewsletterService {
       );
       throw new InternalServerErrorException(
         'Failed to subscribe to newsletter',
-        error,
+        { cause: error },
       );
     }
   }
@@ -125,11 +124,13 @@ export class NewsletterService {
 
       // Check if email exists (case-insensitive comparison)
       const emailLower = email.toLowerCase().trim();
-      return rows.some((row) => {
-        const existingEmail = row[0]?.toString().toLowerCase().trim();
+      return (rows as unknown[][]).some((row) => {
+        const cell = row[0];
+        const existingEmail =
+          typeof cell === 'string' ? cell.toLowerCase().trim() : '';
         return existingEmail === emailLower;
       });
-    } catch (error) {
+    } catch {
       this.logger.error(
         'Error checking for duplicate email:',
         NewsletterService.name,
