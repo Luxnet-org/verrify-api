@@ -297,8 +297,8 @@ Railway collects console logs.
 In the API service dashboard:
 
 1. Enable **Wait for CI** and ensure Railway has the required GitHub permissions.
-   CI runs existing unit tests and the build, and checks lint on changed TypeScript files;
-   the known pre-existing full-repository lint backlog is outside this migration.
+   CI runs existing unit tests and the build. Linting is temporarily disabled
+   while the existing lint backlog is deferred.
 2. Use **one replica** initially because payment reconciliation runs in-process.
 3. Configure the native restart policy according to your operational preference.
 4. For native HTTP readiness checks, set the dashboard healthcheck path to

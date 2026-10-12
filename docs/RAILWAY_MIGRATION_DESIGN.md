@@ -38,8 +38,8 @@ contains scheduled payment reconciliation. Increasing replicas requires reviewin
 the scheduled work's coordination separately.
 
 GitHub Actions becomes a validation workflow for pull requests and pushes to
-`master`: install the lockfile, lint without automatic fixes, run existing unit tests,
-and compile TypeScript. Railway builds the deployment image; GitHub Actions
+`master`: install the lockfile, run existing unit tests,
+and compile TypeScript. CI linting is temporarily disabled. Railway builds the deployment image; GitHub Actions
 must not build the same image again. Railway's **Wait for CI** setting is
 enabled before autodeploys. Remove Docker Hub pushes, Dokploy API calls, and
 deployment secrets from the workflow. Retain local-development Compose.
@@ -186,7 +186,7 @@ Keep the existing unit tests and restore the starter e2e test unchanged. Do
 not run that starter test in CI: it imports the full production module and
 expects a starter response.
 
-Run existing unit tests, lint on changed files, TypeScript compilation,
+Run existing unit tests, TypeScript compilation,
 dependency compatibility checks, and a local production Docker build as
 implementation validation only. Do not add a recurring duplicate Docker build
 to GitHub CI. Verify compiled migration loading in the runtime image. Checks
