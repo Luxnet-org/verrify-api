@@ -175,4 +175,4 @@ This project is UNLICENSED and proprietary to the Verrify organization.
 
 Follow [the Railway setup and exact backup restore guide](docs/RAILWAY_DEPLOYMENT.md). Railway builds the Dockerfile from `master` after GitHub checks pass and applies pending migrations in its pre-deploy step. `start:prod` only starts the API. PostgreSQL/PostGIS and a fresh RabbitMQ service run on Railway; file storage stays on the existing R2 buckets.
 
-CI checks migration-changed TypeScript files for lint, plus existing unit tests and the build. New regression and HTTP tests are deferred. The existing repository-wide lint backlog is deferred.
+CI runs existing unit tests and the build. Linting is temporarily disabled in CI; the local lint command remains available. New regression and HTTP tests are deferred.
