@@ -1,3 +1,4 @@
+import type { JwtSignOptions } from '@nestjs/jwt';
 import * as Joi from 'joi';
 import * as process from 'node:process';
 
@@ -32,14 +33,11 @@ export interface ConfigInterface {
   };
   token: {
     secret: string;
-    jwtExpire: string;
+    jwtExpire: NonNullable<JwtSignOptions['expiresIn']>;
     refreshExpire: number;
   };
   verification: {
     expire: number;
-  };
-  logs: {
-    filePath: string;
   };
   r2: {
     accountId: string;
@@ -132,8 +130,6 @@ export const validationSchema = Joi.object({
 
   VERIFICATION_EXPIRE: Joi.number().required(),
 
-  LOG_FILE_PATH: Joi.string().required(),
-
   R2_ACCOUNT_ID: Joi.string().required(),
   R2_ACCESS_KEY_ID: Joi.string().required(),
   R2_SECRET_ACCESS_KEY: Joi.string().required(),
@@ -199,14 +195,11 @@ export const configuration = (): ConfigInterface => ({
   },
   token: {
     secret: process.env.JWT_SECRET!,
-    jwtExpire: process.env.JWT_EXPIRE!,
+    jwtExpire: process.env.JWT_EXPIRE! as ConfigInterface['token']['jwtExpire'],
     refreshExpire: +process.env.REFRESH_EXPIRE!,
   },
   verification: {
     expire: +process.env.VERIFICATION_EXPIRE!,
-  },
-  logs: {
-    filePath: process.env.LOG_FILE_PATH!,
   },
   r2: {
     accountId: process.env.R2_ACCOUNT_ID!,

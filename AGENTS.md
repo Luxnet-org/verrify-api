@@ -4,7 +4,7 @@
 `src/` contains the NestJS application. Keep HTTP entrypoints in `src/controller/`, business logic in `src/service/`, persistence models in `src/model/`, shared decorators and guards in `src/common/`, and database config and migrations under `src/config/` and `src/database/migrations/`. Email templates live in `src/templates/`. End-to-end tests are in `test/`, and operational notes belong in `docs/`.
 
 ## Build, Test, and Development Commands
-Install dependencies with `npm install`. Use `npm run start:dev` for local development with file watching, `npm run build` to compile into `dist/`, and `npm run start:prod` to run pending TypeORM migrations before booting the server. Quality checks:
+Install dependencies with `npm install`. Use `npm run start:dev` for local development with file watching, `npm run build` to compile into `dist/`, and `npm run start:prod` to start the compiled server. Railway runs pending TypeORM migrations separately with `npm run typeorm:migration-run:prod` in its pre-deploy hook. Quality checks:
 
 - `npm run lint`: run ESLint with auto-fixes for `src/` and `test/`
 - `npm run format`: apply Prettier to TypeScript files

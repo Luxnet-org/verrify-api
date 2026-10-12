@@ -10,7 +10,9 @@ import { configuration, validationSchema } from './configuration';
       isGlobal: true,
       validationSchema,
       validationOptions: {
-        abortEarly: true,
+        libraryOptions: {
+          abortEarly: true,
+        },
       },
     }),
   ],

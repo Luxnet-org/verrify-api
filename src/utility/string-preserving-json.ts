@@ -1,4 +1,4 @@
-import * as JSONbig from 'json-bigint';
+import JSONbig from 'json-bigint';
 
 const parser = JSONbig({
   storeAsString: true,

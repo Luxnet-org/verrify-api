@@ -69,8 +69,8 @@ import { VerificationPackage } from './model/entity/verification-package.entity'
 import { VerificationPackageService } from './service/verification-package/verification-package.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthController } from './controller/health.controller';
-import { FILE_STORAGE } from './service/file/storage/file-storage.constants';
-import { R2StorageService } from './service/file/storage/r2-storage.service';
+import { StorageModule } from '@nestjs/storage';
+import { createStorageOptions } from './service/file/storage/storage.config';
 import { PaymentVerificationEventService } from './service/payment/payment-verification-event.service';
 import { WebhookService } from './service/webhook/webhook.service';
 import { WebhookEventStoreService } from './service/webhook/webhook-event-store.service';
@@ -84,6 +84,11 @@ import { PaymentReconciliationService } from './service/payment/payment-reconcil
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    StorageModule.forRootAsync({
+      imports: [MyConfigModule],
+      inject: [ConfigService],
+      useFactory: createStorageOptions,
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -147,6 +152,11 @@ import { PaymentReconciliationService } from './service/payment/payment-reconcil
                   'Missing configuration for email. Check configuration.ts and .env settings.',
                 );
               }
+              // Mailer 2.0 types defaults as transport options; preserve its
+              // supported Nodemailer `from` default without an unsafe cast.
+              const defaults: MailerOptions['defaults'] & { from: string } = {
+                from: emailConfig.sender,
+              };
               return {
                 transport: {
                   host: emailConfig.host,
@@ -168,9 +178,7 @@ import { PaymentReconciliationService } from './service/payment/payment-reconcil
                   connectionTimeout: 15000,
                   socketTimeout: 20000,
                 },
-                defaults: {
-                  from: emailConfig.sender,
-                },
+                defaults,
                 template: {
                   dir: __dirname + '/templates',
                   adapter: new PugAdapter(),
@@ -249,10 +257,6 @@ import { PaymentReconciliationService } from './service/payment/payment-reconcil
     ActionVerificationService,
     EmailEvent,
     FileService,
-    {
-      provide: FILE_STORAGE,
-      useClass: R2StorageService,
-    },
     CompanyService,
     PropertyService,
     PropertyHelperService,
